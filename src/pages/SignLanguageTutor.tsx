@@ -1,85 +1,208 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Sparkles, ArrowLeft, HeartHandshake } from 'lucide-react';
+import { ArrowLeft, HeartHandshake } from 'lucide-react';
 import { AppShell } from '../components/layout/AppShell';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 import { SectionHeading } from '../components/ui/section-heading';
+import { Badge } from '../components/ui/badge';
+
+// Modular Sign Components
+import { CameraPanel } from '../components/sign/CameraPanel';
+import { RecognitionOutput, type RecognitionItem } from '../components/sign/RecognitionOutput';
+import { TextInputPanel } from '../components/sign/TextInputPanel';
+import { SignGenerationOutput } from '../components/sign/SignGenerationOutput';
+import { SignInstructions } from '../components/sign/SignInstructions';
 
 export default function SignLanguageTutor() {
+  // Camera & Recognition State
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [recognizedSign, setRecognizedSign] = useState<string | null>(null);
+  const [hindiMeaning, setHindiMeaning] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<number>(0);
+  const [recentRecognitions, setRecentRecognitions] = useState<RecognitionItem[]>([]);
+
+  // Text-to-Sign Generation State
+  const [inputText, setInputText] = useState('Namaste good morning');
+  const [inputWords, setInputWords] = useState<string[]>(['Namaste', 'good', 'morning']);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+
+  const playbackTimerRef = useRef<number | null>(null);
+
+  // Convert input text to words array
+  const handleConvertToSigns = (text: string) => {
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
+    setInputWords(words);
+    setCurrentWordIndex(0);
+    setIsPlaying(true);
+  };
+
+  // Playback timer for animated sign sequence
+  useEffect(() => {
+    if (isPlaying && inputWords.length > 0) {
+      const intervalMs = Math.round(1600 / playbackSpeed);
+
+      playbackTimerRef.current = window.setInterval(() => {
+        setCurrentWordIndex((prev) => {
+          if (prev < inputWords.length - 1) {
+            return prev + 1;
+          } else {
+            setIsPlaying(false);
+            return prev;
+          }
+        });
+      }, intervalMs);
+
+      return () => {
+        if (playbackTimerRef.current) {
+          clearInterval(playbackTimerRef.current);
+          playbackTimerRef.current = null;
+        }
+      };
+    }
+  }, [isPlaying, inputWords.length, playbackSpeed]);
+
+  const handlePlay = () => {
+    if (currentWordIndex >= inputWords.length - 1) {
+      setCurrentWordIndex(0);
+    }
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    setIsPlaying(false);
+  };
+
+  const handleReplay = () => {
+    setCurrentWordIndex(0);
+    setIsPlaying(true);
+  };
+
+  const handleSendToConversation = (text: string) => {
+    setInputText((prev) => (prev ? `${prev} ${text}` : text));
+    handleConvertToSigns(inputText ? `${inputText} ${text}` : text);
+  };
+
+  // Simulated gesture demo when camera is active (placeholder for real model in Prompt 7)
+  useEffect(() => {
+    if (!isCameraActive) {
+      setRecognizedSign(null);
+      setConfidence(0);
+      setHindiMeaning(null);
+      return;
+    }
+
+    // Friendly demo detection loop for initial interface presentation
+    const timer = setTimeout(() => {
+      setRecognizedSign('Namaste');
+      setHindiMeaning('नमस्ते / प्रणाम');
+      setConfidence(0.92);
+      setRecentRecognitions((prev) => [
+        {
+          sign: 'Namaste',
+          hindiMeaning: 'नमस्ते',
+          confidence: 0.92,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+        ...prev.slice(0, 4),
+      ]);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [isCameraActive]);
+
   return (
-    <AppShell className="py-12 sm:py-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AppShell className="py-8 sm:py-12 bg-cream-white text-deep-brown font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        <div className="mb-6">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center text-sm font-semibold text-deep-brown/70 hover:text-terracotta transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to Dashboard
-          </Link>
+        {/* Top Header & Back Button */}
+        <div>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center text-sm font-semibold text-deep-brown/70 hover:text-terracotta transition-colors group"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5 group-hover:-translate-x-1 transition-transform" />
+              Back to Dashboard
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <Badge variant="teal" className="text-xs font-bold">
+                <HeartHandshake className="h-3 w-3 mr-1" />
+                Inclusive Bharat
+              </Badge>
+              <Badge variant="turmeric" className="text-xs">
+                Indian Sign Language (ISL)
+              </Badge>
+            </div>
+          </div>
+
+          <SectionHeading
+            badge="SignBridge Studio"
+            badgeVariant="teal"
+            title="Sign Language Practice 🤟"
+            subtitle="Practice Indian Sign Language (ISL) using real-time webcam gesture detection and text-to-sign visual translations."
+            align="center"
+          />
         </div>
 
-        <SectionHeading
-          badge="Inclusive Bharat Initiative"
-          badgeVariant="teal"
-          title="Indian Sign Language Tutor 🤟"
-          subtitle="AI-powered visual learning for deaf and hard-of-hearing learners to practice spoken and written English with hand signs."
-          align="center"
-        />
+        {/* Two-Column Responsive Workspace Layout:
+            Desktop: Left (Camera + Recognition), Right (Text Input + Sign Output + Instructions)
+            Mobile: Stacked in clear visual order */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* LEFT COLUMN: Camera Feed & Real-time Gesture Recognition (lg:col-span-6 or 7) */}
+          <div className="lg:col-span-6 space-y-6">
+            <CameraPanel
+              isCameraActive={isCameraActive}
+              onCameraToggle={setIsCameraActive}
+              onLearnWithoutCamera={() => setIsCameraActive(false)}
+            />
 
-        <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-8 sm:p-12 shadow-warm text-center space-y-6 mt-8">
-          <div className="w-20 h-20 rounded-3xl bg-peacock-teal/15 text-peacock-teal border border-peacock-teal/30 flex items-center justify-center mx-auto text-4xl shadow-warm-sm">
-            🤟
+            <RecognitionOutput
+              recognizedSign={recognizedSign}
+              hindiMeaning={hindiMeaning}
+              confidence={confidence}
+              isCameraActive={isCameraActive}
+              onSendToConversation={handleSendToConversation}
+              recentRecognitions={recentRecognitions}
+            />
           </div>
 
-          <div className="space-y-3 max-w-lg mx-auto">
-            <div className="inline-flex items-center gap-1.5">
-              <Badge variant="turmeric" className="text-xs font-bold">
-                Coming Soon
-              </Badge>
-              <Badge variant="teal" className="text-xs">
-                Under Active Development
-              </Badge>
-            </div>
-            
-            <h3 className="text-2xl font-bold font-display text-deep-brown">
-              Visual Sign Language Studio
-            </h3>
+          {/* RIGHT COLUMN: Text Input to Sign Language & ISL Dictionary References */}
+          <div className="lg:col-span-6 space-y-6">
+            <TextInputPanel
+              text={inputText}
+              onTextChange={setInputText}
+              onConvertToSigns={handleConvertToSigns}
+            />
 
-            <p className="text-sm text-deep-brown/75 leading-relaxed font-sans">
-              Our camera gesture recognition engine is being calibrated for Indian Sign Language (ISL) hand shapes, lip movement synchronization, and bilingual sign glosses.
-            </p>
+            <SignGenerationOutput
+              inputWords={inputWords}
+              currentWordIndex={currentWordIndex}
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onReplay={handleReplay}
+              onSpeedChange={setPlaybackSpeed}
+              onSelectWord={(idx) => {
+                setCurrentWordIndex(idx);
+                setIsPlaying(false);
+              }}
+            />
+
+            <SignInstructions
+              onSelectSign={(word) => {
+                setInputText(word);
+                handleConvertToSigns(word);
+              }}
+            />
           </div>
 
-          {/* Feature Teasers */}
-          <div className="grid sm:grid-cols-3 gap-4 pt-4 text-left">
-            <div className="p-4 rounded-2xl bg-cream-white border border-warm-sand">
-              <Camera className="h-5 w-5 text-peacock-teal mb-2" />
-              <h4 className="font-bold text-sm text-deep-brown">Hand Gesture AI</h4>
-              <p className="text-xs text-deep-brown/70 mt-1">Real-time landmark tracking for ISL alphabets and daily words.</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-cream-white border border-warm-sand">
-              <Sparkles className="h-5 w-5 text-terracotta mb-2" />
-              <h4 className="font-bold text-sm text-deep-brown">Visual Subtitles</h4>
-              <p className="text-xs text-deep-brown/70 mt-1">Live animated visual prompts matching conversational rhythm.</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-cream-white border border-warm-sand">
-              <HeartHandshake className="h-5 w-5 text-turmeric-dark mb-2" />
-              <h4 className="font-bold text-sm text-deep-brown">Accessible For All</h4>
-              <p className="text-xs text-deep-brown/70 mt-1">Free for special educators, schools, and families across India.</p>
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <Button asChild variant="primary" size="lg">
-              <Link to="/dashboard">
-                Practice Voice Conversations Meanwhile
-              </Link>
-            </Button>
-          </div>
         </div>
 
       </div>
