@@ -163,6 +163,44 @@ class SarvamService {
     return data.translated_text || text;
   }
 
+  /**
+   * Speech to Text using Sarvam AI Saaras v3
+   * Transcribes recorded audio buffer directly through Sarvam AI
+   */
+  async transcribeAudio(
+    audioBlob: Blob,
+    languageCode?: string
+  ): Promise<string> {
+    if (!this.isConfigured()) {
+      throw new Error('Sarvam AI API key is not configured.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'speech.wav');
+    formData.append('model', 'saaras:v3');
+    if (languageCode) {
+      const targetLang = LANGUAGE_CODE_MAP[languageCode] || languageCode;
+      formData.append('language_code', targetLang);
+    }
+
+    const endpoint = this.getEndpoint('/speech-to-text');
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'api-subscription-key': this.apiKey,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Sarvam STT error (${response.status}): ${errBody}`);
+    }
+
+    const data = await response.json();
+    return (data.transcript || '').trim();
+  }
+
   stopSpeaking(): void {
     if (this.currentAudio) {
       this.currentAudio.pause();

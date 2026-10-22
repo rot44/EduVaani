@@ -282,7 +282,6 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       if (input && input.trim().length > 0) {
         await processUserMessage(input);
       } else {
-        setError('No speech detected. Tap the mic and speak clearly!');
         setStatus('idle');
       }
     } catch (err: unknown) {
