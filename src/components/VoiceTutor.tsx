@@ -3,9 +3,14 @@ import { Zap, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { speechService, SpeechService } from '../lib/speech';
 import { sarvamService } from '../lib/sarvam';
-import { aiService, ROLEPLAY_SCENARIOS, type ChatMessage } from '../lib/ai';
+import { aiService, ROLEPLAY_SCENARIOS } from '../lib/ai';
 import { translationService } from '../lib/translation';
-import { textToSignSequence, type SignGenerationResult } from '../lib/signGeneration';
+import {
+  multimodalManager,
+  type UnifiedMessage,
+  type InputMode,
+  type OutputMode,
+} from '../lib/multimodal';
 import { MicDiagnosticModal } from './MicDiagnosticModal';
 
 // Modular Subcomponents
@@ -25,7 +30,18 @@ export interface VoiceTutorProps {
 export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   // Session & UI States
   const [status, setStatus] = useState<TutorStatus>('idle');
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [unifiedHistory, setUnifiedHistory] = useState<UnifiedMessage[]>(() =>
+    multimodalManager.getConversationHistory()
+  );
+  const [inputMode, setInputMode] = useState<InputMode>(() =>
+    multimodalManager.getInputMode()
+  );
+  const [outputMode, setOutputMode] = useState<OutputMode>(() =>
+    multimodalManager.getOutputMode()
+  );
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const [isSpeechSupported] = useState(() => SpeechService.isSupported());
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -41,13 +57,18 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const [interimSpeech, setInterimSpeech] = useState('');
   const [micLanguage, setMicLanguage] = useState<string>('en-IN');
 
-  // Sign Language Mode for AI Responses
-  const [isSignMode, setIsSignMode] = useState(false);
-  const [aiSignResult, setAiSignResult] = useState<SignGenerationResult | null>(null);
-  const [signStepIndex, setSignStepIndex] = useState(0);
-
   const chatRef = useRef<HTMLDivElement>(null);
   const hasAutoStartedRef = useRef(false);
+  const sessionStartTimeRef = useRef<number>(Date.now());
+
+  // Subscribe to Multimodal Manager state changes
+  useEffect(() => {
+    return multimodalManager.subscribe(() => {
+      setUnifiedHistory(multimodalManager.getConversationHistory());
+      setInputMode(multimodalManager.getInputMode());
+      setOutputMode(multimodalManager.getOutputMode());
+    });
+  }, []);
 
   // Clean teardown on unmount
   useEffect(() => {
@@ -62,7 +83,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [chatHistory, status, viewMode]);
+  }, [unifiedHistory, status, viewMode]);
 
   const handleLanguageChange = (code: string) => {
     setSelectedLanguage(code);
@@ -79,6 +100,27 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     } catch {
       // ignore animation failure
     }
+  };
+
+  const handleInputModeChange = (mode: InputMode) => {
+    multimodalManager.setInputMode(mode);
+    setInputMode(mode);
+    setVoiceError(null);
+
+    if (mode === 'sign') {
+      setViewMode('call');
+      setIsCameraActive(true);
+    } else if (mode === 'text') {
+      setViewMode('transcript');
+      setShowInputDrawer(true);
+    } else {
+      setViewMode('call');
+    }
+  };
+
+  const handleOutputModeChange = (mode: OutputMode) => {
+    multimodalManager.setOutputMode(mode);
+    setOutputMode(mode);
   };
 
   // Start Voice Session
@@ -105,28 +147,37 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         }
 
         let messageToSpeak = welcome;
+        let translated: string | undefined = undefined;
         if (selectedLanguage !== 'en') {
-          const translated = await translationService.translateToLanguage(welcome, selectedLanguage);
-          const history = aiService.getChatHistory();
-          if (history.length > 0) history[history.length - 1].translatedContent = translated;
+          translated = await translationService.translateToLanguage(welcome, selectedLanguage);
           messageToSpeak = translated;
         }
 
-        // Generate ISL signs for live Gemini AI welcome
-        const signs = textToSignSequence(welcome);
-        setAiSignResult(signs);
-        setSignStepIndex(0);
+        // Initialize session in multimodal manager
+        const welcomeUnified: UnifiedMessage = {
+          id: `ast-${Date.now()}-welcome`,
+          role: 'assistant',
+          content: welcome,
+          source: 'voice',
+          timestamp: new Date(),
+          translatedContent: translated,
+        };
+        (multimodalManager as unknown as { history: UnifiedMessage[] }).history = [welcomeUnified];
+        multimodalManager['notifyListeners']();
 
-        setChatHistory([...aiService.getChatHistory()]);
-        setStatus('speaking');
-        await speechService.speak(messageToSpeak, speechRate);
-        setStatus('idle');
+        if (outputMode === 'voice' || outputMode === 'all') {
+          setStatus('speaking');
+          await speechService.speak(messageToSpeak, speechRate);
+          setStatus('idle');
+        } else {
+          setStatus('idle');
+        }
       } catch {
         setError('Could not connect to voice service. Tap the orb to try again!');
         setStatus('idle');
       }
     },
-    [selectedLanguage, speechRate]
+    [selectedLanguage, speechRate, outputMode]
   );
 
   useEffect(() => {
@@ -136,54 +187,34 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     }
   }, [autoStartMode, isSpeechSupported, startSession]);
 
-  // Step through ISL signs during speech in sign language mode
-  useEffect(() => {
-    if (!isSignMode || status !== 'speaking' || !aiSignResult) return;
-    const sequence = aiSignResult.sequence;
-    if (!sequence || sequence.length === 0 || signStepIndex >= sequence.length - 1) return;
-
-    const currentItem = sequence[signStepIndex];
-    const duration = Math.max(500, currentItem?.duration || 1200);
-
-    const timer = window.setTimeout(() => {
-      setSignStepIndex((prev) => (prev < sequence.length - 1 ? prev + 1 : prev));
-    }, duration);
-
-    return () => window.clearTimeout(timer);
-  }, [isSignMode, status, aiSignResult, signStepIndex]);
-
-  // Process user message through Gemini AI
-  const processUserMessage = async (messageText: string) => {
+  // Process user message through Multimodal Manager (Gemini AI + Voice + Text + Sign)
+  const processUserMessage = async (messageText: string, source: InputMode = inputMode) => {
     if (!messageText.trim()) return;
     try {
       setError(null);
+      setVoiceError(null);
       setStatus('processing');
-      const response = await aiService.sendMessage(messageText);
-      const history = aiService.getChatHistory();
-      const last = history[history.length - 1];
-      let messageToSpeak = response;
 
-      if (last && selectedLanguage !== 'en') {
-        const translated = await translationService.translateToLanguage(response, selectedLanguage);
-        last.translatedContent = translated;
-        messageToSpeak = translated;
-      }
-      setChatHistory([...history]);
+      const assistantMsg = await multimodalManager.sendMessage(messageText, source, {
+        targetLanguage: selectedLanguage,
+        speechRate,
+        scenario: activeScenario,
+        skipAudioOutput: outputMode === 'text' || outputMode === 'sign',
+      });
 
-      // Generate ISL signs for live Gemini AI response
-      const signs = textToSignSequence(response);
-      setAiSignResult(signs);
-      setSignStepIndex(0);
-
-      // Keep celebration every 3 user turns
-      const userMessageCount = history.filter((m) => m.role === 'user').length;
+      const userMessageCount = multimodalManager
+        .getConversationHistory()
+        .filter((m) => m.role === 'user').length;
       if (userMessageCount > 0 && userMessageCount % 3 === 0) {
         triggerCelebration();
       }
 
-      setStatus('speaking');
-      await speechService.speak(messageToSpeak, speechRate);
-      setStatus('idle');
+      if (outputMode === 'voice' || outputMode === 'all') {
+        setStatus('speaking');
+        setTimeout(() => setStatus('idle'), Math.min(6000, assistantMsg.content.length * 60));
+      } else {
+        setStatus('idle');
+      }
     } catch {
       setError('Could not process speech. Please speak again or type below!');
       setStatus('idle');
@@ -200,6 +231,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
 
     try {
       setError(null);
+      setVoiceError(null);
       setInterimSpeech('');
       setStatus('listening');
 
@@ -210,7 +242,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       setInterimSpeech('');
 
       if (input && input.trim().length > 0) {
-        await processUserMessage(input);
+        await processUserMessage(input, 'voice');
       } else {
         setStatus('idle');
       }
@@ -224,16 +256,15 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       } else {
         setError('Could not hear clearly. Tap the microphone and speak your sentence.');
       }
+      setVoiceError('Voice input was unclear. Try typing or using sign language 🤟');
       setStatus('idle');
     }
   };
 
   const handleMicButtonClick = () => {
     if (status === 'listening') {
-      // User tapped while listening -> finish listening and submit captured speech immediately
       speechService.finishListening();
     } else if (status === 'speaking') {
-      // User tapped while AI was speaking -> interrupt AI and start listening
       speechService.stopSpeaking();
       handleVoiceInput();
     } else {
@@ -246,7 +277,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     if (!textInput.trim() || status === 'processing' || status === 'speaking') return;
     const msg = textInput;
     setTextInput('');
-    processUserMessage(msg);
+    processUserMessage(msg, 'text');
   };
 
   const replayMessage = async (text: string, index: number) => {
@@ -269,13 +300,15 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
 
   const handleFinishSession = () => {
     stopAll();
+    const durationMinutes = Math.max(1, Math.round((Date.now() - sessionStartTimeRef.current) / 60000));
+    multimodalManager.saveCurrentSession(durationMinutes, sessionTitle, activeScenario?.id);
     triggerCelebration();
     if (onEnd) onEnd();
   };
 
   // Latest messages for voice call stage
-  const lastAssistantMsg = [...chatHistory].reverse().find((m) => m.role === 'assistant');
-  const lastUserMsg = [...chatHistory].reverse().find((m) => m.role === 'user');
+  const lastAssistantMsg = [...unifiedHistory].reverse().find((m) => m.role === 'assistant');
+  const lastUserMsg = [...unifiedHistory].reverse().find((m) => m.role === 'user');
 
   return (
     <div className="relative w-full min-h-screen flex flex-col bg-gradient-to-b from-cream-white via-warm-ivory to-warm-sand/35 text-deep-brown selection:bg-terracotta selection:text-cream-white overflow-hidden font-sans">
@@ -286,12 +319,14 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-turmeric/10 rounded-full blur-[140px]" />
       </div>
 
-      {/* 1. Top Navigation Bar */}
+      {/* 1. Top Navigation Bar with Input Mode Switcher (Voice | Text | Sign) and Output Mode Selector */}
       <TutorHeader
         sessionTitle={sessionTitle}
-        messageCount={chatHistory.length}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        messageCount={unifiedHistory.length}
+        inputMode={inputMode}
+        onInputModeChange={handleInputModeChange}
+        outputMode={outputMode}
+        onOutputModeChange={handleOutputModeChange}
         voiceEngine={voiceEngine}
         onToggleVoiceEngine={() => {
           const next = speechService.getVoiceEngine() === 'sarvam' ? 'browser' : 'sarvam';
@@ -303,58 +338,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         selectedLanguage={selectedLanguage}
         onLanguageChange={handleLanguageChange}
         onFinishSession={handleFinishSession}
-        isSignMode={isSignMode}
-        onToggleSignMode={() => setIsSignMode((prev) => !prev)}
       />
-
-      {/* 1.5 ISL Sign Visualizer Strip in Voice Tutor (Active in Sign Mode) */}
-      {isSignMode && aiSignResult && aiSignResult.sequence.length > 0 && (
-        <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pt-2 animate-slide-up">
-          <div className="bg-warm-ivory/95 border border-warm-sand rounded-2xl p-3 shadow-warm-sm flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl">🤟</span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-deep-brown font-display">ISL Live Output</span>
-                  {aiSignResult.islGloss && (
-                    <span className="text-[10px] font-mono text-terracotta bg-cream-white px-2 py-0.5 rounded border border-warm-sand">
-                      ISL: {aiSignResult.islGloss}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[11px] text-deep-brown/65">
-                  {aiSignResult.sequence[signStepIndex]?.signData.description || 'Indian sign language posture'}
-                </span>
-              </div>
-            </div>
-
-            {/* Sequence Ribbon */}
-            <div className="flex items-center gap-1.5 overflow-x-auto max-w-md py-1 scrollbar-thin">
-              {aiSignResult.sequence.map((item, idx) => {
-                const isCurrent = idx === signStepIndex;
-                const isDone = idx < signStepIndex;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSignStepIndex(idx)}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1 ${
-                      isCurrent
-                        ? 'bg-terracotta text-cream-white shadow-xs scale-105'
-                        : isDone
-                        ? 'bg-peacock-teal/20 text-peacock-teal border border-peacock-teal/30'
-                        : 'bg-warm-sand/50 text-deep-brown/70 hover:bg-warm-sand'
-                    }`}
-                  >
-                    <span>{item.signData.emoji}</span>
-                    <span>{item.displayWord}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 2. Toast Error Notification (Soft Coral Accent) */}
       {error && (
@@ -376,11 +360,13 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         </div>
       )}
 
-      {/* 3. Main Stage: Voice Call or Transcript View */}
+      {/* 3. Main Stage: Voice Call (with inline Camera in Sign mode) or Transcript View */}
       <main className="flex-grow flex flex-col relative z-10 max-w-4xl mx-auto w-full px-4 py-4 overflow-hidden">
         {viewMode === 'call' ? (
           <CallView
             status={status}
+            inputMode={inputMode}
+            outputMode={outputMode}
             micLanguage={micLanguage}
             interimSpeech={interimSpeech}
             lastUserMsg={lastUserMsg}
@@ -392,10 +378,15 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
               setTextInput(improved);
               setShowInputDrawer(true);
             }}
+            isCameraActive={isCameraActive}
+            onCameraToggle={setIsCameraActive}
+            onSendSignMessage={(signText) => processUserMessage(signText, 'sign')}
+            onSwitchInputMode={handleInputModeChange}
+            voiceError={voiceError}
           />
         ) : (
           <TranscriptView
-            chatHistory={chatHistory}
+            chatHistory={unifiedHistory}
             chatRef={chatRef}
             currentlyPlayingIndex={currentlyPlayingIndex}
             onReplay={replayMessage}

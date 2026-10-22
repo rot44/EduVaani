@@ -1,7 +1,8 @@
-import { Play, Pause, RotateCcw, Sparkles, FastForward, Info, HelpCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Sparkles, FastForward, Info, HelpCircle, Volume2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import type { SignGenerationResult } from '../../lib/signGeneration';
+import { speechService } from '../../lib/speech';
 import signAnimationsData from '../../data/isl-sign-animations.json';
 
 // Backward-compatible dictionary export for SignInstructions
@@ -225,6 +226,29 @@ export function SignGenerationOutput({
                       Touch point: <span className="font-semibold text-terracotta">{currentItem.signData.touchPoint?.replace(/_/g, ' ') || 'Two-handed posture'}</span>
                     </p>
                   </div>
+                </div>
+              )}
+
+              {/* Unsupported Word Voice Pronunciation Fallback */}
+              {currentItem.signType === 'unsupported' && (
+                <div className="p-3 bg-warm-ivory/90 rounded-2xl border border-warm-sand max-w-sm mx-auto flex items-center justify-between gap-3 text-left shadow-xs animate-slide-up">
+                  <div className="text-xs space-y-0.5">
+                    <div className="font-bold text-deep-brown flex items-center gap-1">
+                      <span>No Direct Sign Mapping</span>
+                    </div>
+                    <p className="text-[11px] text-deep-brown/65">
+                      Word: <span className="font-semibold text-terracotta">&quot;{currentItem.word}&quot;</span> (Listen to pronunciation)
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => speechService.speak(currentItem.word)}
+                    className="px-3 py-1.5 rounded-xl bg-peacock-teal/15 hover:bg-peacock-teal/25 text-peacock-teal border border-peacock-teal/30 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors shadow-xs flex-shrink-0"
+                    title="Listen to spoken English audio pronunciation"
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />
+                    <span>Pronounce</span>
+                  </button>
                 </div>
               )}
             </div>

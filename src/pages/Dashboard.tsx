@@ -15,6 +15,7 @@ import { SignLanguageCard } from '../components/dashboard/SignLanguageCard';
 import { ScenarioGrid, type ScenarioFilterType } from '../components/dashboard/ScenarioGrid';
 import { VocabularyBuilder } from '../components/dashboard/VocabularyBuilder';
 import { AchievementChest } from '../components/dashboard/AchievementChest';
+import { PastSessionsList } from '../components/dashboard/PastSessionsList';
 import type { VocabularyCard } from '../components/dashboard/FlashcardDeck';
 
 export const DAILY_VOCABULARY: VocabularyCard[] = [
@@ -209,7 +210,10 @@ export default function Dashboard() {
           onStartScenario={startSession}
         />
 
-        {/* 4. Daily Indian English Vocabulary Builder & 3D Flashcards */}
+        {/* 4. Past Practice Sessions List & Transcripts */}
+        <PastSessionsList onStartVoiceSession={() => startSession('free')} />
+
+        {/* 5. Daily Indian English Vocabulary Builder & 3D Flashcards */}
         <VocabularyBuilder
           vocabulary={DAILY_VOCABULARY}
           masteredWords={masteredWords}

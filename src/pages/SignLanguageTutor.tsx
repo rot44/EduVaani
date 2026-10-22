@@ -5,7 +5,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { SectionHeading } from '../components/ui/section-heading';
 import { Badge } from '../components/ui/badge';
 import { textToSignSequence, type SignGenerationResult } from '../lib/signGeneration';
-import { aiService } from '../lib/ai';
+import { multimodalManager, type UnifiedMessage } from '../lib/multimodal';
 
 // Modular Sign Components
 import { CameraPanel } from '../components/sign/CameraPanel';
@@ -13,6 +13,7 @@ import { RecognitionOutput, type RecognitionItem } from '../components/sign/Reco
 import { TextInputPanel } from '../components/sign/TextInputPanel';
 import { SignGenerationOutput } from '../components/sign/SignGenerationOutput';
 import { SignInstructions } from '../components/sign/SignInstructions';
+import { MessageBubble } from '../components/tutor/MessageBubble';
 
 export default function SignLanguageTutor() {
   // Camera & Recognition State
@@ -21,6 +22,17 @@ export default function SignLanguageTutor() {
   const [hindiMeaning, setHindiMeaning] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number>(0);
   const [recentRecognitions, setRecentRecognitions] = useState<RecognitionItem[]>([]);
+
+  // Unified Multimodal Conversation State
+  const [conversation, setConversation] = useState<UnifiedMessage[]>(() =>
+    multimodalManager.getConversationHistory()
+  );
+
+  useEffect(() => {
+    return multimodalManager.subscribe(() => {
+      setConversation(multimodalManager.getConversationHistory());
+    });
+  }, []);
 
   // Text-to-Sign Generation Engine State
   const [inputText, setInputText] = useState('Namaste good morning');
@@ -42,19 +54,40 @@ export default function SignLanguageTutor() {
     setAiResponseText(null);
   };
 
-  // Ask Gemini AI in Sign Language Mode: Response converted directly into ISL signs!
+  // Ask Gemini AI: routes through Multimodal Communication Manager
   const handleAskAi = async (promptText: string) => {
     if (!promptText.trim() || isAiLoading) return;
     try {
       setIsAiLoading(true);
-      const reply = await aiService.sendMessage(promptText);
-      setAiResponseText(reply);
-      const result = textToSignSequence(reply);
+      const reply = await multimodalManager.sendMessage(promptText, 'text');
+      setAiResponseText(reply.content);
+      const result = textToSignSequence(reply.content);
       setSignResult(result);
       setCurrentStepIndex(0);
       setIsPlaying(true);
     } catch (err) {
       console.error('Failed to get Gemini AI response in sign language mode:', err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  // "Send to conversation" from sign recognition feeds directly into the AI tutor!
+  const handleSendToConversation = async (text: string) => {
+    if (!text.trim() || isAiLoading) return;
+    try {
+      setIsAiLoading(true);
+      setInputText(text);
+      handleConvertToSigns(text);
+
+      const reply = await multimodalManager.sendMessage(text, 'sign');
+      setAiResponseText(reply.content);
+      const result = textToSignSequence(reply.content);
+      setSignResult(result);
+      setCurrentStepIndex(0);
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Failed to send sign to conversation:', err);
     } finally {
       setIsAiLoading(false);
     }
@@ -107,12 +140,6 @@ export default function SignLanguageTutor() {
     setIsPlaying(true);
   };
 
-  const handleSendToConversation = (text: string) => {
-    const combined = inputText ? `${inputText} ${text}` : text;
-    setInputText(combined);
-    handleConvertToSigns(combined);
-  };
-
   // Handle real-time recognition results from signLanguage engine
   const handleRecognitionResult = (res: {
     status: string;
@@ -160,7 +187,14 @@ export default function SignLanguageTutor() {
               Back to Dashboard
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link
+                to="/voice-tutor"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warm-sand/50 hover:bg-peacock-teal/15 text-deep-brown hover:text-peacock-teal text-xs font-bold border border-warm-sand transition-all"
+              >
+                <span>🎙️</span>
+                <span>Voice & Text Tutor</span>
+              </Link>
               <Badge variant="teal" className="text-xs font-bold">
                 <HeartHandshake className="h-3 w-3 mr-1" />
                 Inclusive Bharat
@@ -257,6 +291,61 @@ export default function SignLanguageTutor() {
             />
           </div>
 
+        </div>
+
+        {/* Unified Multimodal Conversation Thread */}
+        <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-6 shadow-warm space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-peacock-teal/15 text-peacock-teal flex items-center justify-center">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-deep-brown font-display flex items-center gap-2">
+                  Unified Conversation Context
+                  <Badge variant="teal" className="text-[10px]">
+                    {conversation.length} {conversation.length === 1 ? 'message' : 'messages'}
+                  </Badge>
+                </h3>
+                <p className="text-xs text-deep-brown/65">
+                  Dialogue carries over seamlessly between Voice, Text, and Sign modes
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/voice-tutor"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-peacock-teal text-cream-white hover:bg-peacock-teal/90 text-xs font-bold shadow-xs transition-colors"
+              >
+                <span>🎙️ Open in Voice Tutor</span>
+              </Link>
+              {conversation.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => multimodalManager.clearConversation()}
+                  className="px-3 py-1.5 rounded-xl border border-warm-sand bg-cream-white hover:border-terracotta text-xs font-semibold text-deep-brown/70 hover:text-terracotta transition-colors cursor-pointer"
+                >
+                  Clear History
+                </button>
+              )}
+            </div>
+          </div>
+
+          {conversation.length === 0 ? (
+            <div className="py-8 text-center text-xs text-deep-brown/60 space-y-1.5 bg-cream-white rounded-2xl border border-dashed border-warm-sand">
+              <p className="font-semibold text-sm text-deep-brown/80 font-display">No conversation messages yet</p>
+              <p className="max-w-md mx-auto">
+                Show a sign to the camera and tap &ldquo;Send to Conversation&rdquo;, or type a prompt above. Messages from the Voice Tutor also appear here in real time.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {conversation.map((msg) => (
+                <MessageBubble key={msg.id} message={msg} />
+              ))}
+            </div>
+          )}
         </div>
 
       </div>

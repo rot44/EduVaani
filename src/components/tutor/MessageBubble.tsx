@@ -1,24 +1,25 @@
 import { Bot, User, Volume2, Languages } from 'lucide-react';
 import type { ChatMessage } from '../../lib/ai';
+import type { UnifiedMessage } from '../../lib/multimodal';
 import { CoachingCard } from './CoachingCard';
 
 export interface MessageBubbleProps {
-  message: ChatMessage;
-  index: number;
-  currentlyPlayingIndex: number | null;
-  onReplay: (text: string, index: number) => void;
+  message: ChatMessage | UnifiedMessage;
+  index?: number;
+  currentlyPlayingIndex?: number | null;
+  onReplay?: (text: string, index: number) => void;
   onPracticeText?: (text: string) => void;
 }
 
 export function MessageBubble({
   message,
-  index,
-  currentlyPlayingIndex,
+  index = 0,
+  currentlyPlayingIndex = null,
   onReplay,
   onPracticeText,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
-  const isCurrentlyPlaying = currentlyPlayingIndex === index;
+  const isCurrentlyPlaying = currentlyPlayingIndex !== null && currentlyPlayingIndex === index;
 
   return (
     <div
@@ -41,6 +42,31 @@ export function MessageBubble({
             : 'bg-warm-ivory text-deep-brown border border-warm-sand rounded-bl-sm'
         }`}
       >
+        {/* Source Mode Badge for user and assistant */}
+        <div className="flex items-center gap-1.5 mb-1.5">
+          {isUser ? (
+            <span
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                (message as { source?: string }).source === 'sign'
+                  ? 'bg-cream-white/20 text-cream-white'
+                  : (message as { source?: string }).source === 'text'
+                  ? 'bg-cream-white/20 text-cream-white'
+                  : 'bg-black/10 text-cream-white'
+              }`}
+            >
+              {(message as { source?: string }).source === 'sign'
+                ? '🤟 Signed'
+                : (message as { source?: string }).source === 'text'
+                ? '💬 Typed'
+                : '🎙️ Spoken'}
+            </span>
+          ) : (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-turmeric/20 text-deep-brown font-mono">
+              AI Tutor
+            </span>
+          )}
+        </div>
+
         <p className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
           {message.content}
         </p>
@@ -64,7 +90,7 @@ export function MessageBubble({
           <div className="mt-3 pt-3 border-t border-warm-sand">
             <CoachingCard
               coachingTip={message.coachingTip}
-              onReplayImproved={() => onReplay(message.coachingTip!.improved, 1000 + index)}
+              onReplayImproved={() => onReplay && onReplay(message.coachingTip!.improved, 1000 + index)}
               onPracticeImproved={() => onPracticeText && onPracticeText(message.coachingTip!.improved)}
               isCollapsible={false}
             />
@@ -79,7 +105,7 @@ export function MessageBubble({
               : 'border-warm-sand/60 text-deep-brown/50'
           }`}
         >
-          {!isUser ? (
+          {!isUser && onReplay ? (
             <button
               type="button"
               onClick={() => onReplay(message.translatedContent || message.content, index)}

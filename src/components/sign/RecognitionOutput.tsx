@@ -111,6 +111,31 @@ export function RecognitionOutput({
         />
       </div>
 
+      {/* Low-Confidence Correction Fallback: "Did you mean: [X]?" */}
+      {isCameraActive && confidencePercent > 0 && confidencePercent < 75 && (
+        <div className="p-3 bg-turmeric/15 border border-turmeric/40 rounded-2xl space-y-2 animate-slide-up">
+          <div className="flex items-center justify-between text-xs font-bold text-deep-brown">
+            <span className="flex items-center gap-1.5">
+              <span>🤔</span>
+              <span>Did you mean one of these signs?</span>
+            </span>
+            <span className="text-[10px] text-deep-brown/60 font-mono">Tap to select</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {['Namaste', 'Hello', 'Thank you', 'Good', 'Help', 'Yes', 'No'].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => onSendToConversation && onSendToConversation(suggestion)}
+                className="px-2.5 py-1 rounded-xl bg-cream-white border border-warm-sand hover:border-terracotta text-xs font-semibold text-deep-brown hover:text-terracotta transition-colors shadow-xs cursor-pointer"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Action CTA: "Send to conversation" button in terracotta */}
       <div className="pt-1">
         <Button
