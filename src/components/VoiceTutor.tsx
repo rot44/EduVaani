@@ -55,9 +55,9 @@ function VaaniOrb({
       glow: 'shadow-orange-500/30'
     },
     listening: {
-      icon: <Mic className="h-10 w-10 text-white animate-pulse" />,
+      icon: <Check className="h-10 w-10 text-white animate-pulse" />,
       gradient: 'from-rose-500 via-red-500 to-amber-500',
-      label: 'Listening to your voice...',
+      label: 'Listening... Tap orb when done',
       glow: 'shadow-red-500/50'
     },
     processing: {
@@ -69,7 +69,7 @@ function VaaniOrb({
     speaking: {
       icon: <Volume2 className="h-10 w-10 text-white animate-bounce" />,
       gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
-      label: 'EduVaani is speaking...',
+      label: 'EduVaani speaking (tap to speak)',
       glow: 'shadow-emerald-500/40'
     },
     error: {
@@ -103,7 +103,7 @@ function VaaniOrb({
         <button
           onClick={onClick}
           disabled={disabled}
-          title={status === 'listening' ? 'Tap to finish speaking' : 'Tap to speak'}
+          title={status === 'listening' ? 'Tap to finish speaking & submit' : status === 'speaking' ? 'Interrupt & speak' : 'Tap to speak'}
           className={`relative z-10 w-32 h-32 rounded-full bg-gradient-to-tr ${cfg.gradient} text-white
             shadow-2xl ${cfg.glow} transition-all duration-300 ease-out transform
             ${disabled ? 'cursor-not-allowed opacity-80' : 'hover:scale-105 active:scale-95 cursor-pointer'}
@@ -150,6 +150,8 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const [showInputDrawer, setShowInputDrawer] = useState(false);
   const [isMicDiagOpen, setIsMicDiagOpen] = useState(false);
   const [showCoachDetails, setShowCoachDetails] = useState(true);
+  const [interimSpeech, setInterimSpeech] = useState('');
+  const [micLanguage, setMicLanguage] = useState<string>('en-IN');
 
   const chatRef = useRef<HTMLDivElement>(null);
   const hasAutoStartedRef = useRef(false);
@@ -262,22 +264,51 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
 
   const handleVoiceInput = async () => {
     if (!isSpeechSupported) {
-      setError('Voice not supported in this browser. You can type below!');
+      setError('Voice recognition is not supported in this browser. Please use Chrome, Edge, or type below!');
       setStatus('idle');
       return;
     }
     try {
       setError(null);
+      setInterimSpeech('');
       setStatus('listening');
-      const input = await speechService.listen();
-      if (input.trim()) {
+
+      const input = await speechService.listen((liveText) => {
+        setInterimSpeech(liveText);
+      }, micLanguage);
+
+      setInterimSpeech('');
+
+      if (input && input.trim().length > 0) {
         await processUserMessage(input);
       } else {
+        setError('No speech detected. Tap the mic and speak clearly!');
         setStatus('idle');
       }
-    } catch {
-      setError('Could not hear clearly. Tap the orb and speak into your microphone!');
+    } catch (err: unknown) {
+      setInterimSpeech('');
+      console.warn("Speech recognition notice:", err);
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('not-allowed')) {
+        setError('Microphone access is blocked. Click "Mic Check" above to allow access.');
+        setIsMicDiagOpen(true);
+      } else {
+        setError('Could not hear clearly. Tap the microphone and speak your sentence.');
+      }
       setStatus('idle');
+    }
+  };
+
+  const handleMicButtonClick = () => {
+    if (status === 'listening') {
+      // User tapped while listening -> finish listening and submit captured speech immediately!
+      speechService.finishListening();
+    } else if (status === 'speaking') {
+      // User tapped while AI was speaking -> interrupt AI and start listening
+      speechService.stopSpeaking();
+      handleVoiceInput();
+    } else {
+      handleVoiceInput();
     }
   };
 
@@ -303,6 +334,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     speechService.stopListening();
     speechService.stopSpeaking();
     setCurrentlyPlayingIndex(null);
+    setInterimSpeech('');
     setStatus('idle');
   };
 
@@ -436,7 +468,19 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
             
             {/* Student's latest speech prompt bubble */}
             <div className="w-full max-w-lg min-h-[50px] flex items-center justify-center text-center">
-              {lastUserMsg ? (
+              {status === 'listening' ? (
+                <div className="glass border border-red-500/40 bg-red-500/10 rounded-2xl px-5 py-2.5 text-xs sm:text-sm text-red-200 shadow-lg animate-pulse flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
+                    <span className="font-semibold text-red-300">
+                      Listening ({micLanguage === 'en-IN' ? 'English (India)' : 'Hindi'}):
+                    </span>
+                  </div>
+                  <span className="italic text-white font-medium">
+                    {interimSpeech ? `"${interimSpeech}"` : 'Listening to you... Speak freely! (Tap orb or wait when done)'}
+                  </span>
+                </div>
+              ) : lastUserMsg ? (
                 <div className="glass border border-white/10 rounded-2xl px-5 py-2.5 text-xs sm:text-sm text-white/90 shadow-lg animate-slide-up">
                   <span className="text-orange-400 font-semibold mr-1.5">You:</span>
                   <span className="italic">"{lastUserMsg.content}"</span>
@@ -452,8 +496,8 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
             <div className="my-auto py-4">
               <VaaniOrb
                 status={status}
-                onClick={status === 'listening' ? stopAll : handleVoiceInput}
-                disabled={status === 'processing' || status === 'speaking'}
+                onClick={handleMicButtonClick}
+                disabled={status === 'processing'}
               />
             </div>
 
@@ -709,42 +753,64 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
             <button
               onClick={toggleSpeechSpeed}
               title="Toggle speech pace"
-              className="glass border border-white/15 text-white/80 hover:text-white rounded-full px-3 py-1.5 text-xs flex items-center gap-1 transition-all cursor-pointer"
+              className="glass border border-white/15 text-white/80 hover:text-white rounded-full px-2.5 sm:px-3 py-1.5 text-xs flex items-center gap-1 transition-all cursor-pointer"
             >
               <Gauge className="h-3 w-3 text-orange-400" />
               <span>{speechRate === 0.85 ? '0.85x' : '1.0x'}</span>
             </button>
 
+            {/* Mic recognition language toggle */}
+            <button
+              onClick={() => setMicLanguage(prev => (prev === 'en-IN' ? 'hi-IN' : 'en-IN'))}
+              title="Toggle speech input language (English Indian accent or Hindi)"
+              className="glass border border-white/15 text-white/80 hover:text-white rounded-full px-2.5 sm:px-3 py-1.5 text-xs flex items-center gap-1 transition-all cursor-pointer"
+            >
+              <Mic className="h-3 w-3 text-emerald-400" />
+              <span>{micLanguage === 'en-IN' ? 'EN' : 'हिंदी'}</span>
+            </button>
+
             {/* Keyboard input drawer toggle */}
             <button
               onClick={() => setShowInputDrawer(prev => !prev)}
-              className={`rounded-full px-3 py-1.5 text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`rounded-full px-2.5 sm:px-3 py-1.5 text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                 showInputDrawer ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40' : 'text-white/70 hover:text-white'
               }`}
             >
               <MessageSquare className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{showInputDrawer ? 'Hide Text' : 'Type Message'}</span>
+              <span className="hidden sm:inline">{showInputDrawer ? 'Hide Text' : 'Type'}</span>
             </button>
 
             {/* Main Microphone Button */}
             <button
-              onClick={status === 'listening' ? stopAll : handleVoiceInput}
-              disabled={status === 'processing' || status === 'speaking'}
+              onClick={handleMicButtonClick}
+              disabled={status === 'processing'}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl transition-all cursor-pointer ${
                 status === 'listening'
                   ? 'bg-red-500 animate-pulse scale-105 shadow-red-500/50'
+                  : status === 'speaking'
+                  ? 'bg-emerald-500 hover:bg-emerald-600 scale-100 shadow-emerald-500/40'
                   : 'bg-gradient-to-tr from-orange-500 to-amber-500 hover:scale-105 active:scale-95 shadow-orange-500/40'
               }`}
-              title="Speak into microphone"
+              title={
+                status === 'listening'
+                  ? 'Tap to send what you said'
+                  : status === 'speaking'
+                  ? 'Tap to speak now'
+                  : 'Speak into microphone'
+              }
             >
-              <Mic className="h-5 w-5" />
+              {status === 'listening' ? (
+                <Check className="h-6 w-6 stroke-[3]" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
             </button>
 
             {/* Stop audio button */}
             <button
               onClick={stopAll}
               title="Stop listening or speaking"
-              className="text-white/60 hover:text-white px-3 py-1.5 text-xs cursor-pointer transition-colors"
+              className="text-white/60 hover:text-white px-2 sm:px-3 py-1.5 text-xs cursor-pointer transition-colors"
             >
               ⏹ Stop
             </button>
