@@ -86,33 +86,37 @@ export default function SignLanguageTutor() {
     handleConvertToSigns(inputText ? `${inputText} ${text}` : text);
   };
 
-  // Simulated gesture demo when camera is active (placeholder for real model in Prompt 7)
-  useEffect(() => {
-    if (!isCameraActive) {
+  // Handle real-time recognition results from signLanguage engine
+  const handleRecognitionResult = (res: {
+    status: string;
+    sign: string | null;
+    hindiMeaning: string | null;
+    confidence: number;
+  }) => {
+    if (res.status === 'detected' && res.sign) {
+      setRecognizedSign(res.sign);
+      setHindiMeaning(res.hindiMeaning);
+      setConfidence(res.confidence);
+      setRecentRecognitions((prev) => {
+        if (prev[0]?.sign === res.sign) return prev;
+        return [
+          {
+            sign: res.sign!,
+            hindiMeaning: res.hindiMeaning || undefined,
+            confidence: res.confidence,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+          ...prev.slice(0, 4),
+        ];
+      });
+    } else if (res.status === 'uncertain') {
+      setConfidence(res.confidence);
+    } else if (res.status === 'no_hand') {
       setRecognizedSign(null);
       setConfidence(0);
       setHindiMeaning(null);
-      return;
     }
-
-    // Friendly demo detection loop for initial interface presentation
-    const timer = setTimeout(() => {
-      setRecognizedSign('Namaste');
-      setHindiMeaning('नमस्ते / प्रणाम');
-      setConfidence(0.92);
-      setRecentRecognitions((prev) => [
-        {
-          sign: 'Namaste',
-          hindiMeaning: 'नमस्ते',
-          confidence: 0.92,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-        ...prev.slice(0, 4),
-      ]);
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [isCameraActive]);
+  };
 
   return (
     <AppShell className="py-8 sm:py-12 bg-cream-white text-deep-brown font-sans">
@@ -154,12 +158,13 @@ export default function SignLanguageTutor() {
             Mobile: Stacked in clear visual order */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* LEFT COLUMN: Camera Feed & Real-time Gesture Recognition (lg:col-span-6 or 7) */}
+          {/* LEFT COLUMN: Camera Feed & Real-time Gesture Recognition (lg:col-span-6) */}
           <div className="lg:col-span-6 space-y-6">
             <CameraPanel
               isCameraActive={isCameraActive}
               onCameraToggle={setIsCameraActive}
               onLearnWithoutCamera={() => setIsCameraActive(false)}
+              onRecognitionResult={handleRecognitionResult}
             />
 
             <RecognitionOutput
