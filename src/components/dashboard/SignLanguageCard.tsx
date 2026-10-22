@@ -2,11 +2,19 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, HeartHandshake } from 'lucide-react';
 import { Badge } from '../ui/badge';
 
-export function SignLanguageCard() {
+export interface SignLanguageCardProps {
+  isProminent?: boolean;
+}
+
+export function SignLanguageCard({ isProminent = false }: SignLanguageCardProps) {
   return (
     <Link
       to="/sign-tutor"
-      className="group w-full rounded-3xl border border-warm-sand bg-warm-ivory hover:border-peacock-teal/50 p-6 sm:p-7 text-left transition-all duration-300 shadow-warm hover:shadow-warm-md relative overflow-hidden block"
+      className={`group w-full rounded-3xl p-6 sm:p-7 text-left transition-all duration-300 shadow-warm hover:shadow-warm-md relative overflow-hidden block ${
+        isProminent
+          ? 'border-2 border-peacock-teal bg-warm-ivory ring-2 ring-peacock-teal/20'
+          : 'border border-warm-sand bg-warm-ivory hover:border-peacock-teal/50'
+      }`}
     >
       {/* Background teal ambient blur */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-peacock-teal/5 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
@@ -28,6 +36,11 @@ export function SignLanguageCard() {
               <HeartHandshake className="h-3 w-3 mr-1" />
               Inclusive
             </Badge>
+            {isProminent && (
+              <Badge variant="turmeric" className="text-[10px] font-bold">
+                ✨ Preferred Mode
+              </Badge>
+            )}
           </div>
           <p className="text-deep-brown/70 text-sm leading-relaxed font-sans">
             Practice English through Indian Sign Language with your camera. Visual prompts, hand gesture recognition, and bilingual glosses.

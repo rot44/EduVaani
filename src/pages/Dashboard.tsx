@@ -16,6 +16,7 @@ import { ScenarioGrid, type ScenarioFilterType } from '../components/dashboard/S
 import { VocabularyBuilder } from '../components/dashboard/VocabularyBuilder';
 import { AchievementChest } from '../components/dashboard/AchievementChest';
 import { PastSessionsList } from '../components/dashboard/PastSessionsList';
+import { OnboardingTourModal } from '../components/dashboard/OnboardingTourModal';
 import type { VocabularyCard } from '../components/dashboard/FlashcardDeck';
 
 export const DAILY_VOCABULARY: VocabularyCard[] = [
@@ -64,12 +65,22 @@ export const DAILY_VOCABULARY: VocabularyCard[] = [
 ];
 
 export default function Dashboard() {
-  const { user, updateStats: contextUpdateStats } = useUser();
+  const { user, updateStats: contextUpdateStats, updateUser } = useUser();
   const navigate = useNavigate();
 
   // Voice Tutor & Session State
   const [activeMode, setActiveMode] = useState<string | null>(null);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
+
+  // Onboarding Feature Tour Overlay State (shows once on first visit)
+  const [isTourOpen, setIsTourOpen] = useState(() => {
+    return user ? !user.onboardingTourSeen : false;
+  });
+
+  const handleDismissTour = () => {
+    setIsTourOpen(false);
+    updateUser({ onboardingTourSeen: true });
+  };
 
   // Scenarios Filter
   const [scenarioFilter, setScenarioFilter] = useState<ScenarioFilterType>('all');
@@ -194,21 +205,41 @@ export default function Dashboard() {
         <WelcomeBanner
           user={user}
           onMicCheck={() => setIsMicDiagOpen(true)}
+          onOpenTour={() => setIsTourOpen(true)}
         />
 
         {/* 2. Interactive Action Cards: Free-Flow Chat + Indian Sign Language Tutor */}
         <div className="grid lg:grid-cols-2 gap-6">
-          <QuickStartChat onStartSession={startSession} />
-          <SignLanguageCard />
+          {user.usesSignLanguage ? (
+            <>
+              <div id="tour-sign-card" className="order-1">
+                <SignLanguageCard isProminent />
+              </div>
+              <div id="tour-quick-chat" className="order-2">
+                <QuickStartChat onStartSession={startSession} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div id="tour-quick-chat">
+                <QuickStartChat onStartSession={startSession} />
+              </div>
+              <div id="tour-sign-card">
+                <SignLanguageCard />
+              </div>
+            </>
+          )}
         </div>
 
         {/* 3. Practice Scenarios Grid with Category Filters */}
-        <ScenarioGrid
-          scenarios={filteredScenarios}
-          currentFilter={scenarioFilter}
-          onFilterChange={setScenarioFilter}
-          onStartScenario={startSession}
-        />
+        <div id="tour-scenario-grid">
+          <ScenarioGrid
+            scenarios={filteredScenarios}
+            currentFilter={scenarioFilter}
+            onFilterChange={setScenarioFilter}
+            onStartScenario={startSession}
+          />
+        </div>
 
         {/* 4. Past Practice Sessions List & Transcripts */}
         <PastSessionsList onStartVoiceSession={() => startSession('free')} />
@@ -234,6 +265,12 @@ export default function Dashboard() {
       <MicDiagnosticModal
         isOpen={isMicDiagOpen}
         onClose={() => setIsMicDiagOpen(false)}
+      />
+
+      {/* Post-Onboarding Feature Tour Overlay */}
+      <OnboardingTourModal
+        isOpen={isTourOpen}
+        onDismiss={handleDismissTour}
       />
     </AppShell>
   );

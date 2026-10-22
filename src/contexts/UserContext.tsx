@@ -4,15 +4,18 @@ import {
   login as authLogin,
   logout as authLogout,
   updateStats as authUpdateStats,
+  updateUserProfile,
   type User,
+  type UserPreferences,
 } from '../lib/auth';
 
 export interface UserContextType {
   user: User | null;
   isLoading: boolean;
-  login: (name: string, email: string) => User;
+  login: (name: string, email: string, preferences?: UserPreferences) => User;
   logout: () => void;
   updateStats: (minutesAdded: number) => User | null;
+  updateUser: (updates: Partial<User>) => User | null;
   refreshUser: () => void;
 }
 
@@ -33,8 +36,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = useCallback((name: string, email: string): User => {
-    const loggedInUser = authLogin(name, email);
+  const login = useCallback((name: string, email: string, preferences?: UserPreferences): User => {
+    const loggedInUser = authLogin(name, email, preferences);
     setUser(loggedInUser);
     return loggedInUser;
   }, []);
@@ -52,6 +55,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return updated;
   }, []);
 
+  const updateUser = useCallback((updates: Partial<User>): User | null => {
+    const updated = updateUserProfile(updates);
+    if (updated) {
+      setUser(updated);
+    }
+    return updated;
+  }, []);
+
   const refreshUser = useCallback(() => {
     const current = getUser();
     setUser(current);
@@ -65,6 +76,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         updateStats,
+        updateUser,
         refreshUser,
       }}
     >

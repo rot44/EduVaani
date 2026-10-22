@@ -1,4 +1,5 @@
-// Simple local auth system (no external service needed)
+export type EnglishLevel = 'beginner' | 'intermediate' | 'advanced';
+
 export interface User {
   id: string;
   name: string;
@@ -9,6 +10,12 @@ export interface User {
   minutesPracticed: number;
   sessionsCompleted: number;
   lastPracticeDate?: string; // YYYY-MM-DD
+  // Onboarding & Learner Preferences
+  motherTongue?: string;
+  englishLevel?: EnglishLevel;
+  usesSignLanguage?: boolean;
+  onboardingCompleted?: boolean;
+  onboardingTourSeen?: boolean;
 }
 
 const STORAGE_KEY = 'eduvaani_user';
@@ -30,21 +37,56 @@ export function saveUser(user: User): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
 }
 
-export function login(name: string, email: string): User {
+export interface UserPreferences {
+  motherTongue?: string;
+  englishLevel?: EnglishLevel;
+  usesSignLanguage?: boolean;
+  onboardingCompleted?: boolean;
+}
+
+export function login(name: string, email: string, preferences?: UserPreferences): User {
   const existing = getUser();
-  if (existing && existing.email === email) return existing;
+  if (existing && existing.email === email) {
+    if (preferences) {
+      const merged: User = {
+        ...existing,
+        name: name || existing.name,
+        ...preferences,
+      };
+      saveUser(merged);
+      return merged;
+    }
+    return existing;
+  }
   const user: User = {
     id: crypto.randomUUID(),
-    name, email,
+    name,
+    email,
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
     createdAt: new Date().toISOString(),
     streak: 1,
     minutesPracticed: 0,
     sessionsCompleted: 0,
     lastPracticeDate: getLocalDateString(),
+    motherTongue: preferences?.motherTongue || 'hi',
+    englishLevel: preferences?.englishLevel || 'beginner',
+    usesSignLanguage: preferences?.usesSignLanguage ?? false,
+    onboardingCompleted: preferences?.onboardingCompleted ?? true,
+    onboardingTourSeen: false,
   };
   saveUser(user);
   return user;
+}
+
+export function updateUserProfile(updates: Partial<User>): User | null {
+  const current = getUser();
+  if (!current) return null;
+  const updated: User = {
+    ...current,
+    ...updates,
+  };
+  saveUser(updated);
+  return updated;
 }
 
 export function logout(): void {
