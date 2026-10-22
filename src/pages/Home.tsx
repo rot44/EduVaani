@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Navbar } from '../components/Navbar';
-import { Footer } from '../components/Footer';
+import { AppShell } from '../components/layout/AppShell';
 import { HeroSection } from '../components/landing/HeroSection';
 import { StatsStrip } from '../components/landing/StatsStrip';
 import { HowItWorks } from '../components/landing/HowItWorks';
@@ -11,10 +10,10 @@ import { AccessibilityHighlight } from '../components/landing/AccessibilityHighl
 import { TestimonialCarousel } from '../components/landing/TestimonialCarousel';
 import { FAQSection } from '../components/landing/FAQSection';
 import { FinalCTA } from '../components/landing/FinalCTA';
-import { getUser } from '../lib/auth';
+import { useUser } from '../contexts/UserContext';
 
 export default function Home() {
-  const user = getUser();
+  const { user } = useUser();
 
   // Dynamic SEO & OpenGraph meta tag updates
   useEffect(() => {
@@ -46,23 +45,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream-white text-deep-brown selection:bg-terracotta selection:text-cream-white font-sans overflow-x-hidden">
-      <Navbar />
-
-      <main className="flex-grow">
-        <HeroSection user={user} />
-        <StatsStrip />
-        <HowItWorks />
-        <LanguageShowcase />
-        <ScenarioGallery user={user} />
-        <ComparisonSection />
-        <AccessibilityHighlight userLoggedIn={!!user} />
-        <TestimonialCarousel />
-        <FAQSection />
-        <FinalCTA user={user} />
-      </main>
-
-      <Footer />
-    </div>
+    <AppShell>
+      <HeroSection user={user} />
+      <StatsStrip />
+      <HowItWorks />
+      <LanguageShowcase />
+      <ScenarioGallery user={user} />
+      <ComparisonSection />
+      <AccessibilityHighlight userLoggedIn={!!user} />
+      <TestimonialCarousel />
+      <FAQSection />
+      <FinalCTA user={user} />
+    </AppShell>
   );
 }
