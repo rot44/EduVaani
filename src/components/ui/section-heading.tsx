@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils"
 import { Badge, type badgeVariants } from "./badge"
 import { type VariantProps } from "class-variance-authority"
 
-export interface SectionHeadingProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SectionHeadingProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title: React.ReactNode
   subtitle?: React.ReactNode
   badge?: React.ReactNode

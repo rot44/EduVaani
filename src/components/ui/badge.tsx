@@ -28,6 +28,8 @@ const badgeVariants = cva(
           "border-transparent bg-soft-coral text-cream-white shadow-warm-sm",
 
         // Backwards-compatible aliases
+        terracotta:
+          "border-transparent bg-terracotta text-cream-white shadow-warm-sm",
         default:
           "border-transparent bg-terracotta text-cream-white shadow-warm-sm",
         saffron:
