@@ -6,6 +6,8 @@ export interface TextInputPanelProps {
   text: string;
   onTextChange: (text: string) => void;
   onConvertToSigns: (text: string) => void;
+  onAskAi?: (text: string) => void;
+  isAiLoading?: boolean;
   disabled?: boolean;
 }
 
@@ -13,13 +15,15 @@ const PRESET_PHRASES = [
   'Namaste good morning',
   'Thank you friend',
   'Help me learn English',
-  'Hello India',
+  'What is your name',
 ];
 
 export function TextInputPanel({
   text,
   onTextChange,
   onConvertToSigns,
+  onAskAi,
+  isAiLoading = false,
   disabled = false,
 }: TextInputPanelProps) {
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -91,17 +95,34 @@ export function TextInputPanel({
             ))}
           </div>
 
-          {/* Submit Button in Terracotta */}
-          <Button
-            type="submit"
-            disabled={!text.trim() || disabled}
-            variant="primary"
-            size="sm"
-            className="shadow-warm-sm px-5 ml-auto"
-          >
-            <span>Convert to Signs</span>
-            <ArrowRight className="h-4 w-4 ml-1.5" />
-          </Button>
+          {/* Action Buttons: Ask AI Partner + Direct Convert to Signs */}
+          <div className="flex items-center gap-2 ml-auto">
+            {onAskAi && (
+              <Button
+                type="button"
+                onClick={() => onAskAi(text)}
+                disabled={!text.trim() || disabled || isAiLoading}
+                variant="outline"
+                size="sm"
+                className="shadow-xs px-3.5 border-peacock-teal/40 text-peacock-teal hover:bg-peacock-teal/10"
+                title="Send query to Gemini AI and display its response in ISL signs"
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                <span>{isAiLoading ? 'AI Thinking...' : 'Ask AI Tutor'}</span>
+              </Button>
+            )}
+
+            <Button
+              type="submit"
+              disabled={!text.trim() || disabled || isAiLoading}
+              variant="primary"
+              size="sm"
+              className="shadow-warm-sm px-4"
+            >
+              <span>Convert to Signs</span>
+              <ArrowRight className="h-4 w-4 ml-1.5" />
+            </Button>
+          </div>
         </div>
       </form>
     </div>

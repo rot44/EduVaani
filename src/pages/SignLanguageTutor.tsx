@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, HeartHandshake } from 'lucide-react';
+import { ArrowLeft, HeartHandshake, Sparkles } from 'lucide-react';
 import { AppShell } from '../components/layout/AppShell';
 import { SectionHeading } from '../components/ui/section-heading';
 import { Badge } from '../components/ui/badge';
+import { textToSignSequence, type SignGenerationResult } from '../lib/signGeneration';
+import { aiService } from '../lib/ai';
 
 // Modular Sign Components
 import { CameraPanel } from '../components/sign/CameraPanel';
@@ -20,54 +22,78 @@ export default function SignLanguageTutor() {
   const [confidence, setConfidence] = useState<number>(0);
   const [recentRecognitions, setRecentRecognitions] = useState<RecognitionItem[]>([]);
 
-  // Text-to-Sign Generation State
+  // Text-to-Sign Generation Engine State
   const [inputText, setInputText] = useState('Namaste good morning');
-  const [inputWords, setInputWords] = useState<string[]>(['Namaste', 'good', 'morning']);
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [signResult, setSignResult] = useState<SignGenerationResult>(() =>
+    textToSignSequence('Namaste good morning')
+  );
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiResponseText, setAiResponseText] = useState<string | null>(null);
 
-  const playbackTimerRef = useRef<number | null>(null);
-
-  // Convert input text to words array
+  // Convert input text to ISL sign sequence
   const handleConvertToSigns = (text: string) => {
-    const words = text
-      .trim()
-      .split(/\s+/)
-      .filter((w) => w.length > 0);
-    setInputWords(words);
-    setCurrentWordIndex(0);
+    const result = textToSignSequence(text);
+    setSignResult(result);
+    setCurrentStepIndex(0);
     setIsPlaying(true);
+    setAiResponseText(null);
   };
 
-  // Playback timer for animated sign sequence
-  useEffect(() => {
-    if (isPlaying && inputWords.length > 0) {
-      const intervalMs = Math.round(1600 / playbackSpeed);
-
-      playbackTimerRef.current = window.setInterval(() => {
-        setCurrentWordIndex((prev) => {
-          if (prev < inputWords.length - 1) {
-            return prev + 1;
-          } else {
-            setIsPlaying(false);
-            return prev;
-          }
-        });
-      }, intervalMs);
-
-      return () => {
-        if (playbackTimerRef.current) {
-          clearInterval(playbackTimerRef.current);
-          playbackTimerRef.current = null;
-        }
-      };
+  // Ask Gemini AI in Sign Language Mode: Response converted directly into ISL signs!
+  const handleAskAi = async (promptText: string) => {
+    if (!promptText.trim() || isAiLoading) return;
+    try {
+      setIsAiLoading(true);
+      const reply = await aiService.sendMessage(promptText);
+      setAiResponseText(reply);
+      const result = textToSignSequence(reply);
+      setSignResult(result);
+      setCurrentStepIndex(0);
+      setIsPlaying(true);
+    } catch (err) {
+      console.error('Failed to get Gemini AI response in sign language mode:', err);
+    } finally {
+      setIsAiLoading(false);
     }
-  }, [isPlaying, inputWords.length, playbackSpeed]);
+  };
+
+  // Adaptive Kinematic Playback Timer based on each sign's duration
+  useEffect(() => {
+    if (!isPlaying) return;
+    const sequence = signResult.sequence;
+    if (!sequence || sequence.length === 0) {
+      setIsPlaying(false);
+      return;
+    }
+
+    if (currentStepIndex >= sequence.length - 1) {
+      setIsPlaying(false);
+      return;
+    }
+
+    const currentItem = sequence[currentStepIndex];
+    const duration = Math.max(500, Math.round((currentItem?.duration || 1400) / playbackSpeed));
+
+    const timer = window.setTimeout(() => {
+      setCurrentStepIndex((prev) => {
+        if (prev < sequence.length - 1) {
+          return prev + 1;
+        } else {
+          setIsPlaying(false);
+          return prev;
+        }
+      });
+    }, duration);
+
+    return () => window.clearTimeout(timer);
+  }, [isPlaying, currentStepIndex, playbackSpeed, signResult]);
 
   const handlePlay = () => {
-    if (currentWordIndex >= inputWords.length - 1) {
-      setCurrentWordIndex(0);
+    if (currentStepIndex >= signResult.sequence.length - 1) {
+      setCurrentStepIndex(0);
     }
     setIsPlaying(true);
   };
@@ -77,13 +103,14 @@ export default function SignLanguageTutor() {
   };
 
   const handleReplay = () => {
-    setCurrentWordIndex(0);
+    setCurrentStepIndex(0);
     setIsPlaying(true);
   };
 
   const handleSendToConversation = (text: string) => {
-    setInputText((prev) => (prev ? `${prev} ${text}` : text));
-    handleConvertToSigns(inputText ? `${inputText} ${text}` : text);
+    const combined = inputText ? `${inputText} ${text}` : text;
+    setInputText(combined);
+    handleConvertToSigns(combined);
   };
 
   // Handle real-time recognition results from signLanguage engine
@@ -183,19 +210,41 @@ export default function SignLanguageTutor() {
               text={inputText}
               onTextChange={setInputText}
               onConvertToSigns={handleConvertToSigns}
+              onAskAi={handleAskAi}
+              isAiLoading={isAiLoading}
             />
 
+            {/* AI Tutor Response Banner (When Gemini replies, its answer is transformed to ISL) */}
+            {aiResponseText && (
+              <div className="p-4 bg-peacock-teal/10 border border-peacock-teal/30 rounded-2xl flex items-start gap-3 shadow-xs animate-slide-up">
+                <div className="w-8 h-8 rounded-xl bg-peacock-teal text-cream-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="text-xs space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-peacock-teal font-display">Gemini AI Response</span>
+                    <Badge variant="turmeric" className="text-[10px]">
+                      Converted to ISL Signs Below
+                    </Badge>
+                  </div>
+                  <p className="text-deep-brown font-medium leading-relaxed">
+                    &ldquo;{aiResponseText}&rdquo;
+                  </p>
+                </div>
+              </div>
+            )}
+
             <SignGenerationOutput
-              inputWords={inputWords}
-              currentWordIndex={currentWordIndex}
+              signResult={signResult}
+              currentStepIndex={currentStepIndex}
               isPlaying={isPlaying}
               playbackSpeed={playbackSpeed}
               onPlay={handlePlay}
               onPause={handlePause}
               onReplay={handleReplay}
               onSpeedChange={setPlaybackSpeed}
-              onSelectWord={(idx) => {
-                setCurrentWordIndex(idx);
+              onSelectStep={(idx) => {
+                setCurrentStepIndex(idx);
                 setIsPlaying(false);
               }}
             />

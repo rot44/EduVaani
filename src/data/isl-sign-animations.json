@@ -1,0 +1,568 @@
+{
+  "version": "1.0.0",
+  "name": "EduVaani ISL Sign Animations & Fingerspelling Dataset",
+  "license": "CC-BY-4.0",
+  "standard": "Indian Sign Language Research and Training Centre (ISLRTC) conventions",
+  "words": {
+    "namaste": {
+      "label": "Namaste",
+      "hindi": "नमस्ते / प्रणाम",
+      "hands": "two-handed",
+      "emoji": "🙏",
+      "duration": 1800,
+      "description": "Both palms pressed flat together at the center of chest with a slight respectful nod.",
+      "animation": "prayer-pulse",
+      "svgIcon": "namaste"
+    },
+    "hello": {
+      "label": "Hello",
+      "hindi": "नमस्ते / हैलो",
+      "hands": "one-handed",
+      "emoji": "👋",
+      "duration": 1600,
+      "description": "Dominant flat hand touching brow/temple, waving outward away from face.",
+      "animation": "salute-wave",
+      "svgIcon": "hello"
+    },
+    "thank you": {
+      "label": "Thank You",
+      "hindi": "धन्यवाद / शुक्रिया",
+      "hands": "one-handed",
+      "emoji": "🤲",
+      "duration": 1600,
+      "description": "Fingertips touch the chin, then move downward and outward toward the partner.",
+      "animation": "chin-forward",
+      "svgIcon": "thank-you"
+    },
+    "thanks": {
+      "label": "Thank You",
+      "hindi": "धन्यवाद",
+      "hands": "one-handed",
+      "emoji": "🤲",
+      "duration": 1600,
+      "description": "Fingertips touch chin and extend outward warmly.",
+      "animation": "chin-forward",
+      "svgIcon": "thank-you"
+    },
+    "good": {
+      "label": "Good",
+      "hindi": "अच्छा / बढ़िया",
+      "hands": "one-handed",
+      "emoji": "👍",
+      "duration": 1400,
+      "description": "Closed fist with upright thumb pushed forward confidently from chest.",
+      "animation": "thumb-forward",
+      "svgIcon": "thumbs-up"
+    },
+    "bad": {
+      "label": "Bad",
+      "hindi": "बुरा / ख़राब",
+      "hands": "one-handed",
+      "emoji": "👎",
+      "duration": 1400,
+      "description": "Thumb turned downward with a decisive downward sweep.",
+      "animation": "thumb-down",
+      "svgIcon": "thumbs-down"
+    },
+    "morning": {
+      "label": "Morning",
+      "hindi": "सुबह",
+      "hands": "two-handed",
+      "emoji": "🌅",
+      "duration": 1800,
+      "description": "Curved open hand rising above flat base forearm, symbolizing the rising sun.",
+      "animation": "sun-rise",
+      "svgIcon": "sun-rise"
+    },
+    "night": {
+      "label": "Night",
+      "hindi": "रात",
+      "hands": "two-handed",
+      "emoji": "🌙",
+      "duration": 1800,
+      "description": "Dominant hand curves downward over horizontal base forearm like sunset.",
+      "animation": "sun-set",
+      "svgIcon": "sun-set"
+    },
+    "yes": {
+      "label": "Yes",
+      "hindi": "हाँ",
+      "hands": "one-handed",
+      "emoji": "✊",
+      "duration": 1400,
+      "description": "Closed fist nodding up and down from the wrist like a head nod.",
+      "animation": "fist-nod",
+      "svgIcon": "fist"
+    },
+    "no": {
+      "label": "No",
+      "hindi": "नहीं",
+      "hands": "one-handed",
+      "emoji": "✌️",
+      "duration": 1400,
+      "description": "Index and middle fingers snap down onto thumb tip twice.",
+      "animation": "fingers-snap",
+      "svgIcon": "fingers-snap"
+    },
+    "help": {
+      "label": "Help",
+      "hindi": "मदद / सहायता",
+      "hands": "two-handed",
+      "emoji": "🤝",
+      "duration": 1800,
+      "description": "Closed fist with thumb upright lifted upward by flat base palm.",
+      "animation": "lift-fist",
+      "svgIcon": "lift-fist"
+    },
+    "please": {
+      "label": "Please",
+      "hindi": "कृपया",
+      "hands": "one-handed",
+      "emoji": "🤲",
+      "duration": 1600,
+      "description": "Flat palm rubbing in circular clockwise motion over chest.",
+      "animation": "chest-circle",
+      "svgIcon": "chest-circle"
+    },
+    "english": {
+      "label": "English",
+      "hindi": "अंग्रेज़ी",
+      "hands": "two-handed",
+      "emoji": "🤝",
+      "duration": 1800,
+      "description": "Dominant hand clasps the non-dominant hand across the back twice in a handshake motion.",
+      "animation": "handshake-clasp",
+      "svgIcon": "handshake"
+    },
+    "learn": {
+      "label": "Learn",
+      "hindi": "सीखना",
+      "hands": "two-handed",
+      "emoji": "💡",
+      "duration": 1800,
+      "description": "Fingertips draw knowledge from flat base palm upward to touch forehead.",
+      "animation": "palm-to-head",
+      "svgIcon": "palm-to-head"
+    },
+    "india": {
+      "label": "India / Bharat",
+      "hindi": "भारत",
+      "hands": "one-handed",
+      "emoji": "🇮🇳",
+      "duration": 1600,
+      "description": "Thumb touches center of forehead gently (bindi mark position).",
+      "animation": "forehead-touch",
+      "svgIcon": "forehead-touch"
+    },
+    "bharat": {
+      "label": "Bharat",
+      "hindi": "भारत",
+      "hands": "one-handed",
+      "emoji": "🇮🇳",
+      "duration": 1600,
+      "description": "Thumb touches center of forehead gently in respectful placement.",
+      "animation": "forehead-touch",
+      "svgIcon": "forehead-touch"
+    },
+    "friend": {
+      "label": "Friend",
+      "hindi": "दोस्त / मित्र",
+      "hands": "two-handed",
+      "emoji": "🤞",
+      "duration": 1600,
+      "description": "Index fingers of both hands hook together like links of friendship.",
+      "animation": "index-hook",
+      "svgIcon": "index-hook"
+    },
+    "water": {
+      "label": "Water",
+      "hindi": "पानी / जल",
+      "hands": "one-handed",
+      "emoji": "💧",
+      "duration": 1500,
+      "description": "Index finger in W-handshape or cupped hand taps center of lower lip twice.",
+      "animation": "lip-tap",
+      "svgIcon": "lip-tap"
+    },
+    "food": {
+      "label": "Food / Eat",
+      "hindi": "खाना / भोजन",
+      "hands": "one-handed",
+      "emoji": "🍲",
+      "duration": 1600,
+      "description": "Fingertips brought together and tapped near the mouth twice.",
+      "animation": "mouth-feed",
+      "svgIcon": "mouth-feed"
+    },
+    "eat": {
+      "label": "Eat",
+      "hindi": "खाना",
+      "hands": "one-handed",
+      "emoji": "🍲",
+      "duration": 1600,
+      "description": "Fingertips brought together and tapped near the mouth twice.",
+      "animation": "mouth-feed",
+      "svgIcon": "mouth-feed"
+    },
+    "teacher": {
+      "label": "Teacher",
+      "hindi": "अध्यापक / शिक्षक",
+      "hands": "two-handed",
+      "emoji": "🧑‍🏫",
+      "duration": 1800,
+      "description": "Flat O-hands at temples move forward, opening slightly into flat palms.",
+      "animation": "temple-forward",
+      "svgIcon": "temple-forward"
+    },
+    "student": {
+      "label": "Student",
+      "hindi": "विद्यार्थी / छात्र",
+      "hands": "two-handed",
+      "emoji": "🧑‍🎓",
+      "duration": 1800,
+      "description": "Sign for Learn (palm to head) followed by Person agentive sign.",
+      "animation": "palm-to-head",
+      "svgIcon": "student"
+    },
+    "school": {
+      "label": "School",
+      "hindi": "विद्यालय / स्कूल",
+      "hands": "two-handed",
+      "emoji": "🏫",
+      "duration": 1800,
+      "description": "Dominant flat hand claps twice gently across the horizontal palm of base hand.",
+      "animation": "palm-clap",
+      "svgIcon": "palm-clap"
+    },
+    "name": {
+      "label": "Name",
+      "hindi": "नाम",
+      "hands": "two-handed",
+      "emoji": "🏷️",
+      "duration": 1600,
+      "description": "Extended index and middle fingers of right hand tap over left index and middle fingers twice.",
+      "animation": "finger-cross-tap",
+      "svgIcon": "name-cross"
+    },
+    "what": {
+      "label": "What",
+      "hindi": "क्या",
+      "hands": "two-handed",
+      "emoji": "❓",
+      "duration": 1600,
+      "description": "Both open palms held upward and shaken side to side with questioning facial expression.",
+      "animation": "palms-shrug",
+      "svgIcon": "palms-up"
+    },
+    "where": {
+      "label": "Where",
+      "hindi": "कहाँ",
+      "hands": "one-handed",
+      "emoji": "📍",
+      "duration": 1500,
+      "description": "Index finger extended upright, pointing and shaking side-to-side questioningly.",
+      "animation": "finger-wag",
+      "svgIcon": "finger-point"
+    },
+    "how": {
+      "label": "How",
+      "hindi": "कैसे",
+      "hands": "two-handed",
+      "emoji": "🔄",
+      "duration": 1600,
+      "description": "Curved hands with backs facing each other roll outward until palms face upward.",
+      "animation": "hands-roll",
+      "svgIcon": "hands-roll"
+    },
+    "who": {
+      "label": "Who",
+      "hindi": "कौन",
+      "hands": "one-handed",
+      "emoji": "👤",
+      "duration": 1500,
+      "description": "Index finger circles in small loops near the mouth and chin.",
+      "animation": "lip-circle",
+      "svgIcon": "lip-circle"
+    },
+    "me": {
+      "label": "Me / I",
+      "hindi": "मैं / मुझे",
+      "hands": "one-handed",
+      "emoji": "🙋",
+      "duration": 1200,
+      "description": "Index finger points directly to center of own chest.",
+      "animation": "chest-point",
+      "svgIcon": "point-self"
+    },
+    "i": {
+      "label": "I / Me",
+      "hindi": "मैं",
+      "hands": "one-handed",
+      "emoji": "🙋",
+      "duration": 1200,
+      "description": "Index finger points directly to center of own chest.",
+      "animation": "chest-point",
+      "svgIcon": "point-self"
+    },
+    "you": {
+      "label": "You",
+      "hindi": "आप / तुम",
+      "hands": "one-handed",
+      "emoji": "👉",
+      "duration": 1200,
+      "description": "Index finger points forward toward the conversation partner.",
+      "animation": "point-forward",
+      "svgIcon": "point-forward"
+    },
+    "your": {
+      "label": "Your",
+      "hindi": "आपका / तुम्हारा",
+      "hands": "one-handed",
+      "emoji": "🫱",
+      "duration": 1300,
+      "description": "Open flat palm pushed gently forward toward conversation partner.",
+      "animation": "palm-push",
+      "svgIcon": "palm-push"
+    },
+    "happy": {
+      "label": "Happy",
+      "hindi": "खुश / प्रसन्न",
+      "hands": "two-handed",
+      "emoji": "😊",
+      "duration": 1600,
+      "description": "Both flat open palms brush upward against chest repeatedly with a cheerful smile.",
+      "animation": "chest-brush-up",
+      "svgIcon": "happy-brush"
+    },
+    "welcome": {
+      "label": "Welcome",
+      "hindi": "स्वागत है",
+      "hands": "two-handed",
+      "emoji": "🤗",
+      "duration": 1800,
+      "description": "Both open palms sweep inward and toward the body in an inviting arc.",
+      "animation": "sweep-inward",
+      "svgIcon": "welcome-sweep"
+    },
+    "practice": {
+      "label": "Practice",
+      "hindi": "अभ्यास",
+      "hands": "two-handed",
+      "emoji": "🎯",
+      "duration": 1800,
+      "description": "Dominant fist with A-hand shape rubs back and forth over base index finger.",
+      "animation": "rub-back-forth",
+      "svgIcon": "rub-fist"
+    }
+  },
+  "alphabet": {
+    "A": {
+      "letter": "A",
+      "hands": "two-handed",
+      "emoji": "🅰️",
+      "description": "Left hand open flat pointing up; right index finger touches left thumb tip (first vowel in ISL A-E-I-O-U sequence).",
+      "touchPoint": "left_thumb_tip",
+      "duration": 1000
+    },
+    "B": {
+      "letter": "B",
+      "hands": "two-handed",
+      "emoji": "🅱️",
+      "description": "Both hands form circles with thumbs and index fingers, joined side-by-side to form letter B.",
+      "touchPoint": "twin_circles",
+      "duration": 1000
+    },
+    "C": {
+      "letter": "C",
+      "hands": "one-handed",
+      "emoji": "🅲",
+      "description": "Hand curved into a clear semi-circular C arc held in space.",
+      "touchPoint": "curved_arc",
+      "duration": 1000
+    },
+    "D": {
+      "letter": "D",
+      "hands": "two-handed",
+      "emoji": "🅳",
+      "description": "Left index points upright (stem of D); right hand C-shape touches left index tip and base.",
+      "touchPoint": "arc_on_vertical_index",
+      "duration": 1000
+    },
+    "E": {
+      "letter": "E",
+      "hands": "two-handed",
+      "emoji": "🅴",
+      "description": "Left hand open flat; right index touches the tip of left index finger (second vowel in ISL).",
+      "touchPoint": "left_index_tip",
+      "duration": 1000
+    },
+    "F": {
+      "letter": "F",
+      "hands": "two-handed",
+      "emoji": "🅵",
+      "description": "Left index and middle extended together; right index and middle cross across them like letter F.",
+      "touchPoint": "two_fingers_crossed",
+      "duration": 1000
+    },
+    "G": {
+      "letter": "G",
+      "hands": "two-handed",
+      "emoji": "🅶",
+      "description": "Both hands form fists; right fist placed directly on top of left fist.",
+      "touchPoint": "fist_on_fist",
+      "duration": 1000
+    },
+    "H": {
+      "letter": "H",
+      "hands": "two-handed",
+      "emoji": "🅷",
+      "description": "Left flat hand horizontal; right flat hand sweeps across left palm from wrist to fingertips.",
+      "touchPoint": "palm_sweep",
+      "duration": 1000
+    },
+    "I": {
+      "letter": "I",
+      "hands": "two-handed",
+      "emoji": "ℹ️",
+      "description": "Left hand open flat; right index touches tip of left middle finger (third vowel in ISL).",
+      "touchPoint": "left_middle_tip",
+      "duration": 1000
+    },
+    "J": {
+      "letter": "J",
+      "hands": "two-handed",
+      "emoji": "🇯",
+      "description": "Right index traces letter J path downwards from left middle fingertip across left palm.",
+      "touchPoint": "trace_j",
+      "duration": 1100
+    },
+    "K": {
+      "letter": "K",
+      "hands": "two-handed",
+      "emoji": "🅺",
+      "description": "Left index upright; right index hooked into right angle against left index knuckle.",
+      "touchPoint": "hook_on_stem",
+      "duration": 1000
+    },
+    "L": {
+      "letter": "L",
+      "hands": "one-handed",
+      "emoji": "🅻",
+      "description": "Right hand thumb and index extended at 90 degrees forming letter L.",
+      "touchPoint": "perpendicular_l",
+      "duration": 1000
+    },
+    "M": {
+      "letter": "M",
+      "hands": "two-handed",
+      "emoji": "🅼",
+      "description": "Right hand three middle fingers (index, middle, ring) placed flat across left palm (three legs of M).",
+      "touchPoint": "three_fingers_on_palm",
+      "duration": 1000
+    },
+    "N": {
+      "letter": "N",
+      "hands": "two-handed",
+      "emoji": "🅽",
+      "description": "Right hand two fingers (index, middle) placed across left palm (two legs of N).",
+      "touchPoint": "two_fingers_on_palm",
+      "duration": 1000
+    },
+    "O": {
+      "letter": "O",
+      "hands": "two-handed",
+      "emoji": "🅾️",
+      "description": "Left hand open flat; right index touches tip of left ring finger (fourth vowel in ISL).",
+      "touchPoint": "left_ring_tip",
+      "duration": 1000
+    },
+    "P": {
+      "letter": "P",
+      "hands": "two-handed",
+      "emoji": "🅿️",
+      "description": "Left index upright; right hand forms circle with thumb & index touching left index tip.",
+      "touchPoint": "circle_on_top_of_stem",
+      "duration": 1000
+    },
+    "Q": {
+      "letter": "Q",
+      "hands": "two-handed",
+      "emoji": "🆀",
+      "description": "Left hand forms horizontal circle (O); right index placed into circle to form tail of Q.",
+      "touchPoint": "circle_with_tail",
+      "duration": 1000
+    },
+    "R": {
+      "letter": "R",
+      "hands": "two-handed",
+      "emoji": "🆁",
+      "description": "Right index hooked over the top of left index finger.",
+      "touchPoint": "hook_over_stem",
+      "duration": 1000
+    },
+    "S": {
+      "letter": "S",
+      "hands": "two-handed",
+      "emoji": "🆂",
+      "description": "Both pinky fingers hooked together like interlocking S links.",
+      "touchPoint": "interlocking_pinkies",
+      "duration": 1000
+    },
+    "T": {
+      "letter": "T",
+      "hands": "two-handed",
+      "emoji": "🆃",
+      "description": "Left index upright; right index placed horizontally across the top forming letter T.",
+      "touchPoint": "cross_on_top",
+      "duration": 1000
+    },
+    "U": {
+      "letter": "U",
+      "hands": "two-handed",
+      "emoji": "🆄",
+      "description": "Left hand open flat; right index touches tip of left pinky finger (fifth vowel in ISL).",
+      "touchPoint": "left_pinky_tip",
+      "duration": 1000
+    },
+    "V": {
+      "letter": "V",
+      "hands": "one-handed",
+      "emoji": "✌️",
+      "description": "Right index and middle fingers spread apart in clear V shape.",
+      "touchPoint": "spread_v",
+      "duration": 1000
+    },
+    "W": {
+      "letter": "W",
+      "hands": "two-handed",
+      "emoji": "🆆",
+      "description": "Fingers of both open hands interlocked with palms facing inward, forming W peaks.",
+      "touchPoint": "interlocked_fingers",
+      "duration": 1000
+    },
+    "X": {
+      "letter": "X",
+      "hands": "two-handed",
+      "emoji": "🆇",
+      "description": "Both index fingers crossed at right angles to form letter X.",
+      "touchPoint": "crossed_indexes",
+      "duration": 1000
+    },
+    "Y": {
+      "letter": "Y",
+      "hands": "two-handed",
+      "emoji": "🆈",
+      "description": "Left thumb and index spread in L; right index placed into vertex forming letter Y.",
+      "touchPoint": "index_in_vertex",
+      "duration": 1000
+    },
+    "Z": {
+      "letter": "Z",
+      "hands": "two-handed",
+      "emoji": "🆉",
+      "description": "Right index touches left palm, forming Z zig-zag motion across the palm.",
+      "touchPoint": "zig_zag_on_palm",
+      "duration": 1100
+    }
+  }
+}

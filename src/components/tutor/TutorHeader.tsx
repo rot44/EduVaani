@@ -14,6 +14,8 @@ export interface TutorHeaderProps {
   selectedLanguage: string;
   onLanguageChange: (code: string) => void;
   onFinishSession: () => void;
+  isSignMode?: boolean;
+  onToggleSignMode?: () => void;
 }
 
 export function TutorHeader({
@@ -28,6 +30,8 @@ export function TutorHeader({
   selectedLanguage,
   onLanguageChange,
   onFinishSession,
+  isSignMode = false,
+  onToggleSignMode,
 }: TutorHeaderProps) {
   return (
     <header className="relative z-20 bg-warm-ivory/95 border-b border-warm-sand px-4 sm:px-6 py-3 backdrop-blur-xl shadow-warm-sm">
@@ -94,6 +98,23 @@ export function TutorHeader({
               title="Toggle between Sarvam Bulbul and Browser Web Speech TTS"
             >
               {voiceEngine === 'sarvam' ? '🇮🇳 Bulbul Voice' : '🌐 Browser TTS'}
+            </button>
+          )}
+
+          {/* ISL Sign Mode Toggle */}
+          {onToggleSignMode && (
+            <button
+              type="button"
+              onClick={onToggleSignMode}
+              className={`border rounded-full px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer shadow-sm flex items-center gap-1 ${
+                isSignMode
+                  ? 'border-peacock-teal/50 bg-peacock-teal/20 text-peacock-teal font-bold'
+                  : 'border-warm-sand bg-cream-white text-deep-brown/75 hover:bg-warm-sand/40'
+              }`}
+              title="Toggle Indian Sign Language (ISL) visualizer for AI tutor speech"
+            >
+              <span>🤟</span>
+              <span className="hidden sm:inline">ISL Mode</span>
             </button>
           )}
 

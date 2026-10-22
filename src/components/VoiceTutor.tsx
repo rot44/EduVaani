@@ -5,6 +5,7 @@ import { speechService, SpeechService } from '../lib/speech';
 import { sarvamService } from '../lib/sarvam';
 import { aiService, ROLEPLAY_SCENARIOS, type ChatMessage } from '../lib/ai';
 import { translationService } from '../lib/translation';
+import { textToSignSequence, type SignGenerationResult } from '../lib/signGeneration';
 import { MicDiagnosticModal } from './MicDiagnosticModal';
 
 // Modular Subcomponents
@@ -39,6 +40,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const [isMicDiagOpen, setIsMicDiagOpen] = useState(false);
   const [interimSpeech, setInterimSpeech] = useState('');
   const [micLanguage, setMicLanguage] = useState<string>('en-IN');
+
+  // Sign Language Mode for AI Responses
+  const [isSignMode, setIsSignMode] = useState(false);
+  const [aiSignResult, setAiSignResult] = useState<SignGenerationResult | null>(null);
+  const [signStepIndex, setSignStepIndex] = useState(0);
 
   const chatRef = useRef<HTMLDivElement>(null);
   const hasAutoStartedRef = useRef(false);
@@ -106,6 +112,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
           messageToSpeak = translated;
         }
 
+        // Generate ISL signs for live Gemini AI welcome
+        const signs = textToSignSequence(welcome);
+        setAiSignResult(signs);
+        setSignStepIndex(0);
+
         setChatHistory([...aiService.getChatHistory()]);
         setStatus('speaking');
         await speechService.speak(messageToSpeak, speechRate);
@@ -125,6 +136,22 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     }
   }, [autoStartMode, isSpeechSupported, startSession]);
 
+  // Step through ISL signs during speech in sign language mode
+  useEffect(() => {
+    if (!isSignMode || status !== 'speaking' || !aiSignResult) return;
+    const sequence = aiSignResult.sequence;
+    if (!sequence || sequence.length === 0 || signStepIndex >= sequence.length - 1) return;
+
+    const currentItem = sequence[signStepIndex];
+    const duration = Math.max(500, currentItem?.duration || 1200);
+
+    const timer = window.setTimeout(() => {
+      setSignStepIndex((prev) => (prev < sequence.length - 1 ? prev + 1 : prev));
+    }, duration);
+
+    return () => window.clearTimeout(timer);
+  }, [isSignMode, status, aiSignResult, signStepIndex]);
+
   // Process user message through Gemini AI
   const processUserMessage = async (messageText: string) => {
     if (!messageText.trim()) return;
@@ -142,6 +169,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         messageToSpeak = translated;
       }
       setChatHistory([...history]);
+
+      // Generate ISL signs for live Gemini AI response
+      const signs = textToSignSequence(response);
+      setAiSignResult(signs);
+      setSignStepIndex(0);
 
       // Keep celebration every 3 user turns
       const userMessageCount = history.filter((m) => m.role === 'user').length;
@@ -271,7 +303,58 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         selectedLanguage={selectedLanguage}
         onLanguageChange={handleLanguageChange}
         onFinishSession={handleFinishSession}
+        isSignMode={isSignMode}
+        onToggleSignMode={() => setIsSignMode((prev) => !prev)}
       />
+
+      {/* 1.5 ISL Sign Visualizer Strip in Voice Tutor (Active in Sign Mode) */}
+      {isSignMode && aiSignResult && aiSignResult.sequence.length > 0 && (
+        <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pt-2 animate-slide-up">
+          <div className="bg-warm-ivory/95 border border-warm-sand rounded-2xl p-3 shadow-warm-sm flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">🤟</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-deep-brown font-display">ISL Live Output</span>
+                  {aiSignResult.islGloss && (
+                    <span className="text-[10px] font-mono text-terracotta bg-cream-white px-2 py-0.5 rounded border border-warm-sand">
+                      ISL: {aiSignResult.islGloss}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-deep-brown/65">
+                  {aiSignResult.sequence[signStepIndex]?.signData.description || 'Indian sign language posture'}
+                </span>
+              </div>
+            </div>
+
+            {/* Sequence Ribbon */}
+            <div className="flex items-center gap-1.5 overflow-x-auto max-w-md py-1 scrollbar-thin">
+              {aiSignResult.sequence.map((item, idx) => {
+                const isCurrent = idx === signStepIndex;
+                const isDone = idx < signStepIndex;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSignStepIndex(idx)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1 ${
+                      isCurrent
+                        ? 'bg-terracotta text-cream-white shadow-xs scale-105'
+                        : isDone
+                        ? 'bg-peacock-teal/20 text-peacock-teal border border-peacock-teal/30'
+                        : 'bg-warm-sand/50 text-deep-brown/70 hover:bg-warm-sand'
+                    }`}
+                  >
+                    <span>{item.signData.emoji}</span>
+                    <span>{item.displayWord}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 2. Toast Error Notification (Soft Coral Accent) */}
       {error && (
