@@ -6,31 +6,33 @@ interface AudioWaveVisualizerProps {
   color?: string;
 }
 
+const IDLE_BARS = [12, 16, 22, 18, 24, 20, 16, 18, 20, 16, 12];
+
 export function AudioWaveVisualizer({ isActive, status }: AudioWaveVisualizerProps) {
-  const [bars, setBars] = useState<number[]>([15, 25, 40, 20, 35, 50, 30, 20, 45, 25, 15]);
+  const [bars, setBars] = useState<number[]>(IDLE_BARS);
 
   useEffect(() => {
-    if (!isActive) {
-      setBars([10, 14, 18, 14, 20, 16, 12, 14, 16, 12, 10]);
-      return;
-    }
+    if (!isActive) return;
 
     const interval = setInterval(() => {
       setBars(prev =>
         prev.map(() => {
           if (status === 'speaking') {
-            return Math.floor(Math.random() * 45) + 15;
+            return Math.floor(Math.random() * 45) + 16;
           } else if (status === 'listening') {
-            return Math.floor(Math.random() * 35) + 12;
+            return Math.floor(Math.random() * 36) + 14;
           } else if (status === 'processing') {
-            return Math.floor(Math.random() * 20) + 10;
+            return Math.floor(Math.random() * 22) + 10;
           }
-          return 10;
+          return 12;
         })
       );
     }, 100);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      setBars(IDLE_BARS);
+    };
   }, [isActive, status]);
 
   const getGradient = () => {
@@ -42,19 +44,19 @@ export function AudioWaveVisualizer({ isActive, status }: AudioWaveVisualizerPro
       case 'processing':
         return 'from-amber-400 via-yellow-400 to-orange-400';
       default:
-        return 'from-orange-400/50 to-amber-400/50';
+        return 'from-orange-400/40 to-amber-400/40';
     }
   };
 
   return (
-    <div className="flex items-center justify-center gap-1.5 h-16 px-4 py-2">
+    <div className="flex items-center justify-center gap-1.5 h-14 px-4 py-2" aria-hidden="true">
       {bars.map((height, i) => (
         <div
           key={i}
           className={`w-1 sm:w-1.5 rounded-full bg-gradient-to-t ${getGradient()} transition-all duration-150 ease-in-out`}
           style={{
-            height: `${height}px`,
-            opacity: isActive ? 0.9 : 0.35,
+            height: `${isActive ? height : 12}px`,
+            opacity: isActive ? 0.95 : 0.25,
           }}
         />
       ))}

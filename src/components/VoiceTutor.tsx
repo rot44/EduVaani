@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, Bot, User, X, BrainCircuit, Languages, Zap, Sparkles, Send, Gauge, PartyPopper } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Mic, Volume2, Bot, User, X, BrainCircuit, Languages, Zap, Sparkles, Send, Gauge, PartyPopper, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { speechService, SpeechService } from '../lib/speech';
 import { sarvamService } from '../lib/sarvam';
@@ -7,6 +7,7 @@ import { aiService, ROLEPLAY_SCENARIOS, type ChatMessage } from '../lib/ai';
 import { translationService } from '../lib/translation';
 import { LanguageSelector } from './LanguageSelector';
 import { AudioWaveVisualizer } from './AudioWaveVisualizer';
+import { MicDiagnosticModal } from './MicDiagnosticModal';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
@@ -111,7 +112,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const [status, setStatus] = useState<TutorStatus>('idle');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
+  const [isSpeechSupported] = useState(() => SpeechService.isSupported());
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [speechRate, setSpeechRate] = useState<number>(0.85);
   const [sessionTitle, setSessionTitle] = useState('Free Chat');
@@ -119,10 +120,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const [activeScenario, setActiveScenario] = useState<(typeof ROLEPLAY_SCENARIOS)[0] | null>(null);
   const [currentlyPlayingIndex, setCurrentlyPlayingIndex] = useState<number | null>(null);
   const [voiceEngine, setVoiceEngine] = useState<'sarvam' | 'browser'>(speechService.getVoiceEngine());
+  const [isMicDiagOpen, setIsMicDiagOpen] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
+  const hasAutoStartedRef = useRef(false);
 
   useEffect(() => {
-    setIsSpeechSupported(SpeechService.isSupported());
     return () => {
       speechService.stopListening();
       speechService.stopSpeaking();
@@ -156,7 +158,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     }
   };
 
-  const startSession = async (mode: string) => {
+  const startSession = useCallback(async (mode: string) => {
     try {
       setError(null);
       setStatus('processing');
@@ -191,13 +193,14 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       setError('Could not connect to AI service. Please verify your internet or API key.');
       setStatus('error');
     }
-  };
+  }, [selectedLanguage, speechRate]);
 
   useEffect(() => {
-    if (autoStartMode && isSpeechSupported) {
+    if (autoStartMode && isSpeechSupported && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
       startSession(autoStartMode);
     }
-  }, [autoStartMode, isSpeechSupported]);
+  }, [autoStartMode, isSpeechSupported, startSession]);
 
   const processUserMessage = async (messageText: string) => {
     if (!messageText.trim()) return;
@@ -352,6 +355,16 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
             {/* Language dropdown */}
             <LanguageSelector currentLanguage={selectedLanguage} onLanguageChange={handleLanguageChange} />
 
+            {/* Mic Diagnostic modal button */}
+            <button
+              onClick={() => setIsMicDiagOpen(true)}
+              title="Test microphone & audio output"
+              className="glass border border-white/15 text-white/80 hover:text-white rounded-full px-3 py-1.5 text-xs flex items-center gap-1.5 transition-all hover:border-emerald-400/40 cursor-pointer"
+            >
+              <Mic className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Mic Check</span>
+            </button>
+
             {/* Stop audio button */}
             <button
               onClick={stopAll}
@@ -430,6 +443,67 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
                     <Languages className="h-3 w-3" /> अनुवाद / Translation
                   </div>
                   <p className="text-xs text-amber-200 font-medium leading-relaxed">{msg.translatedContent}</p>
+                </div>
+              )}
+
+              {/* AI Coaching Tip Card */}
+              {msg.coachingTip && (
+                <div className="mt-3 pt-3 border-t border-white/15 bg-slate-950/70 rounded-xl p-3 border border-orange-500/25 space-y-2 text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-orange-300 font-semibold text-xs">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+                      <span>Vaani AI Coach</span>
+                    </div>
+                    <Badge
+                      variant={msg.coachingTip.fluencyScore >= 85 ? 'saffron' : 'outline'}
+                      className="text-[10px] py-0 px-2 font-bold"
+                    >
+                      Fluency {msg.coachingTip.fluencyScore}%
+                    </Badge>
+                  </div>
+
+                  <div className="text-xs space-y-1">
+                    <div className="text-white/90">
+                      <span className="text-emerald-400 font-semibold">✨ Better phrasing: </span>
+                      <span className="text-emerald-200 italic font-medium">"{msg.coachingTip.improved}"</span>
+                    </div>
+
+                    {msg.coachingTip.explanationHindi && (
+                      <div className="text-amber-200/90 text-[11px] leading-relaxed pt-0.5">
+                        <span className="text-amber-300 font-medium">💡 Tip: </span>
+                        {msg.coachingTip.explanationHindi}
+                      </div>
+                    )}
+
+                    {msg.coachingTip.rule && (
+                      <div className="text-white/50 text-[10px]">
+                        Focus: <span className="text-orange-300/80 font-medium">{msg.coachingTip.rule}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audio shadow button */}
+                  <div className="pt-1 flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => replayMessage(msg.coachingTip!.improved, 1000 + i)}
+                      className="glass border border-orange-400/40 hover:border-orange-400 text-orange-200 hover:text-white px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Listen to native Indian pronunciation"
+                    >
+                      <Volume2 className={`h-3 w-3 text-orange-400 ${currentlyPlayingIndex === 1000 + i ? 'animate-bounce text-emerald-400' : ''}`} />
+                      <span>{currentlyPlayingIndex === 1000 + i ? 'Playing...' : 'Hear improved sentence'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setTextInput(msg.coachingTip!.improved);
+                      }}
+                      className="glass border border-white/20 hover:border-white/40 text-white/80 hover:text-white px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer"
+                      title="Practice repeating this sentence"
+                    >
+                      <Check className="h-3 w-3 text-emerald-400" />
+                      <span>Practice this</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -525,6 +599,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
           </div>
         </div>
       </footer>
+      {/* Audio Diagnostic Modal */}
+      <MicDiagnosticModal
+        isOpen={isMicDiagOpen}
+        onClose={() => setIsMicDiagOpen(false)}
+      />
     </div>
   );
 }

@@ -1,10 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export interface CoachingTip {
+  original: string;
+  improved: string;
+  explanationHindi: string;
+  fluencyScore: number;
+  rule: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   translatedContent?: string;
   timestamp: Date;
+  coachingTip?: CoachingTip;
 }
 
 export interface RoleplayScenario {
@@ -159,6 +168,7 @@ export const ROLEPLAY_SCENARIOS: RoleplayScenario[] = [
 export class AIService {
   private genAI: GoogleGenerativeAI | null = null;
   private model: any = null;
+  private fallbackModel: any = null;
   private chatHistory: ChatMessage[] = [];
   private currentScenario: RoleplayScenario | null = null;
 
@@ -166,7 +176,8 @@ export class AIService {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      this.model = this.genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
+      this.fallbackModel = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     }
   }
 
@@ -197,34 +208,91 @@ export class AIService {
       return demo;
     }
 
+    let prompt = '';
+    if (this.currentScenario) {
+      prompt = `${this.currentScenario.systemPrompt}\n\nContext: ${this.currentScenario.context}\n\n`;
+    } else {
+      prompt = 'You are EduVaani, a friendly AI English tutor for Indian students. Help them practice English conversation. Be encouraging, simple, and conversational. Keep responses under 60 words.\n\n';
+    }
+
+    const recentHistory = this.chatHistory.slice(-8);
+    prompt += 'Conversation History:\n';
+    recentHistory.forEach(msg => {
+      prompt += `${msg.role === 'user' ? 'Student' : 'EduVaani'}: ${msg.content}\n`;
+    });
+
+    prompt += `
+Instruction:
+1. Respond naturally as ${this.currentScenario ? 'the character' : 'EduVaani'}. Keep answer warm, conversational, and under 50 words.
+2. Provide gentle grammar & fluency coaching on the Student's latest message ("${userInput}"). If it was already great, celebrate it!
+
+Format your response EXACTLY as:
+[REPLY]
+<Conversational answer here>
+
+[COACH]
+Improved: <A natural, grammatically correct version of what student said>
+HindiTip: <1 short sentence in Hindi explaining the nuance or praising effort>
+Score: <Score from 70 to 100>
+Rule: <Short 3-6 word grammar or phrasing tip>
+`;
+
     try {
-      let prompt = '';
-      if (this.currentScenario) {
-        prompt = `${this.currentScenario.systemPrompt}\n\nContext: ${this.currentScenario.context}\n\n`;
-      } else {
-        prompt = 'You are EduVaani, a friendly AI English tutor for Indian students. Help them practice English conversation. Be encouraging, simple, and conversational. Gently correct mistakes and keep the conversation flowing. Keep responses under 100 words.\n\n';
+      let rawText = '';
+      try {
+        const result = await this.model.generateContent(prompt);
+        rawText = result.response.text();
+      } catch (primaryErr: unknown) {
+        console.warn("Primary model (gemini-3.8-flash) failed, trying fallback:", primaryErr);
+        if (this.fallbackModel) {
+          const fallbackRes = await this.fallbackModel.generateContent(prompt);
+          rawText = fallbackRes.response.text();
+        } else {
+          throw primaryErr;
+        }
       }
 
-      const recentHistory = this.chatHistory.slice(-8);
-      prompt += 'Conversation:\n';
-      recentHistory.forEach(msg => {
-        prompt += `${msg.role === 'user' ? 'Student' : 'EduVaani'}: ${msg.content}\n`;
-      });
-      prompt += '\nRespond naturally as EduVaani. Keep under 100 words.';
-
-      const result = await this.model.generateContent(prompt);
-      const response = result.response.text();
-      this.addMessage('assistant', response);
-      return response;
-    } catch (error: any) {
-      const errMsg = "I'm having trouble connecting right now. Please check your API key or try again in a moment! 🙏";
+      const { reply, coachingTip } = this.parseResponse(rawText, userInput);
+      this.addMessage('assistant', reply, coachingTip);
+      return reply;
+    } catch (error: unknown) {
+      console.error("Gemini AI error:", error);
+      const errMsg = "I'm having a little trouble connecting right now. Please check your internet or try again in a moment! 🙏";
       this.addMessage('assistant', errMsg);
       return errMsg;
     }
   }
 
-  private addMessage(role: 'user' | 'assistant', content: string): void {
-    this.chatHistory.push({ role, content, timestamp: new Date() });
+  private parseResponse(raw: string, originalInput: string): { reply: string; coachingTip?: CoachingTip } {
+    let reply = raw.trim();
+    let coachingTip: CoachingTip | undefined = undefined;
+
+    if (raw.includes('[REPLY]') && raw.includes('[COACH]')) {
+      const parts = raw.split('[COACH]');
+      reply = parts[0].replace('[REPLY]', '').trim();
+      const coachSection = parts[1] || '';
+
+      const improvedMatch = coachSection.match(/Improved:\s*(.+)/i);
+      const hindiMatch = coachSection.match(/HindiTip:\s*(.+)/i);
+      const scoreMatch = coachSection.match(/Score:\s*(\d+)/i);
+      const ruleMatch = coachSection.match(/Rule:\s*(.+)/i);
+
+      if (improvedMatch && hindiMatch) {
+        coachingTip = {
+          original: originalInput,
+          improved: improvedMatch[1].trim(),
+          explanationHindi: hindiMatch[1].trim(),
+          fluencyScore: scoreMatch ? parseInt(scoreMatch[1], 10) : 85,
+          rule: ruleMatch ? ruleMatch[1].trim() : 'Natural Conversation'
+        };
+      }
+    }
+
+    return { reply, coachingTip };
+  }
+
+  private addMessage(role: 'user' | 'assistant', content: string, coachingTip?: CoachingTip): void {
+    this.chatHistory.push({ role, content, coachingTip, timestamp: new Date() });
     if (this.chatHistory.length > 20) {
       this.chatHistory = this.chatHistory.slice(-20);
     }
