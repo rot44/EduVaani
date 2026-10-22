@@ -4,34 +4,42 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer active:scale-95",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-cream-white disabled:pointer-events-none disabled:opacity-50 cursor-pointer active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default:
-          "bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:brightness-110",
-        destructive:
-          "bg-red-500 text-white hover:bg-red-600 shadow-sm",
-        outline:
-          "border border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 hover:border-orange-400/50",
+        // Core Palette Variants
+        primary:
+          "bg-terracotta text-cream-white shadow-warm-sm hover:bg-terracotta-hover hover:shadow-terracotta",
         secondary:
-          "bg-white/10 text-white hover:bg-white/20 border border-white/10",
+          "bg-peacock-teal text-cream-white shadow-warm-sm hover:bg-peacock-teal-hover hover:shadow-teal",
+        accent:
+          "bg-turmeric text-deep-brown shadow-warm-sm hover:bg-turmeric-hover hover:shadow-turmeric font-bold",
+        outline:
+          "border border-warm-sand bg-cream-white/50 text-deep-brown hover:bg-warm-sand/60 hover:border-terracotta/40 shadow-sm",
         ghost:
-          "text-white/80 hover:text-white hover:bg-white/10",
-        link:
-          "text-orange-400 underline-offset-4 hover:underline",
+          "text-deep-brown hover:bg-warm-sand/60 hover:text-deep-brown",
+        destructive:
+          "bg-soft-coral text-cream-white shadow-warm-sm hover:bg-soft-coral-hover",
+
+        // Backwards-compatible aliases
+        default:
+          "bg-terracotta text-cream-white shadow-warm-sm hover:bg-terracotta-hover hover:shadow-terracotta",
         glow:
-          "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/60 hover:scale-105",
+          "bg-terracotta text-cream-white shadow-terracotta hover:bg-terracotta-hover hover:scale-[1.02] active:scale-[0.98]",
+        link:
+          "text-terracotta underline-offset-4 hover:underline p-0 h-auto font-medium",
       },
       size: {
         default: "h-11 px-5 py-2.5",
         sm: "h-9 rounded-lg px-3.5 text-xs",
         lg: "h-13 rounded-2xl px-8 text-base font-bold",
         icon: "h-10 w-10 rounded-xl",
+        pill: "h-11 px-6 rounded-full text-sm",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "primary",
       size: "default",
     },
   }

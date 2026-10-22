@@ -3,26 +3,41 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "../../lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta focus:ring-offset-2 tracking-wide gap-1.5",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow",
+        // Core Palette Variants
+        primary:
+          "border-transparent bg-terracotta text-cream-white shadow-warm-sm",
         secondary:
-          "border-white/10 bg-white/10 text-white hover:bg-white/15",
-        destructive:
-          "border-transparent bg-red-500 text-white shadow",
+          "border-transparent bg-peacock-teal text-cream-white shadow-warm-sm",
+        accent:
+          "border-transparent bg-turmeric text-deep-brown font-bold shadow-warm-sm",
+        turmeric:
+          "border border-turmeric/40 bg-turmeric/20 text-deep-brown font-semibold",
+        teal:
+          "border border-peacock-teal/30 bg-peacock-teal/15 text-peacock-teal font-semibold",
         outline:
-          "border-white/20 text-white/90 bg-white/5 backdrop-blur-sm",
+          "border border-warm-sand bg-cream-white/70 text-deep-brown font-medium",
+        ivory:
+          "border border-warm-sand bg-warm-ivory text-deep-brown font-medium shadow-warm-sm",
+        sand:
+          "border-transparent bg-warm-sand text-deep-brown font-medium",
+        destructive:
+          "border-transparent bg-soft-coral text-cream-white shadow-warm-sm",
+
+        // Backwards-compatible aliases
+        default:
+          "border-transparent bg-terracotta text-cream-white shadow-warm-sm",
         saffron:
-          "border-orange-500/30 bg-orange-500/15 text-orange-300 font-medium",
+          "border border-turmeric/40 bg-turmeric/20 text-deep-brown font-semibold",
         success:
-          "border-emerald-500/30 bg-emerald-500/15 text-emerald-300 font-medium",
+          "border border-peacock-teal/30 bg-peacock-teal/15 text-peacock-teal font-semibold",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "primary",
     },
   }
 )
