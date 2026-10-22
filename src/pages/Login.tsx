@@ -98,13 +98,19 @@ export default function Login() {
         <div className="absolute inset-0 bg-[radial-gradient(#D4A373_1px,transparent_1px)] [background-size:24px_24px] opacity-25" />
       </div>
 
+      {/* Skip to Content link */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to login form
+      </a>
+
       <div className="w-full max-w-xl relative z-10 py-8">
         {/* Brand Header with Gentle Breathing Logo Orb */}
-        <div className="text-center mb-6 sm:mb-8">
+        <header className="text-center mb-6 sm:mb-8">
           <Link
             to="/"
             className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-tr from-terracotta via-turmeric to-terracotta shadow-warm-lg mb-4 animate-breathe group"
             title="EduVaani Home"
+            aria-label="EduVaani Home"
           >
             <Mic className="h-10 w-10 text-cream-white group-hover:scale-110 transition-transform" />
           </Link>
@@ -114,13 +120,17 @@ export default function Login() {
           <p className="text-terracotta font-bold text-sm sm:text-base mt-1 font-display">
             आपकी आवाज़, आपकी पहचान
           </p>
-          <p className="text-deep-brown/60 text-xs sm:text-sm mt-0.5">
+          <p className="text-deep-brown/70 text-xs sm:text-sm mt-0.5">
             AI Voice & Indian Sign Language Tutor for Bharat 🇮🇳
           </p>
-        </div>
+        </header>
 
         {/* Centered Main Card */}
-        <div className="bg-warm-ivory border border-warm-sand rounded-3xl p-6 sm:p-8 shadow-warm-lg backdrop-blur-md relative">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="bg-warm-ivory border border-warm-sand rounded-3xl p-6 sm:p-8 shadow-warm-lg backdrop-blur-md relative focus:outline-none"
+        >
           
           {/* Step Progress Pills */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-warm-sand/80">
@@ -441,7 +451,7 @@ export default function Login() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </main>
 
         {/* Security & Privacy Footer Guarantee */}
         <div className="flex items-center justify-center gap-2 text-deep-brown/60 text-xs mt-6 text-center">

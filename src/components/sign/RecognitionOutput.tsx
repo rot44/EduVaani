@@ -57,8 +57,13 @@ export function RecognitionOutput({
         )}
       </div>
 
-      {/* Main Display Area */}
-      <div className="rounded-2xl border border-warm-sand bg-cream-white p-6 text-center space-y-3 min-h-[160px] flex flex-col justify-center shadow-inner">
+      {/* Main Display Area (Live region for screen reader updates) */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={recognizedSign ? `Recognized sign: ${recognizedSign}${hindiMeaning ? `, Hindi meaning: ${hindiMeaning}` : ''}. Confidence: ${confidencePercent}%` : 'Sign recognition standby'}
+        className="rounded-2xl border border-warm-sand bg-cream-white p-6 text-center space-y-3 min-h-[160px] flex flex-col justify-center shadow-inner"
+      >
         {isLoading ? (
           /* Warm sand skeleton shimmer when model is loading */
           <div className="space-y-3 animate-pulse max-w-xs mx-auto w-full py-4">
@@ -142,9 +147,10 @@ export function RecognitionOutput({
           onClick={() => recognizedSign && onSendToConversation && onSendToConversation(recognizedSign)}
           disabled={!recognizedSign}
           variant="primary"
-          className="w-full justify-center shadow-warm-sm"
+          aria-label={recognizedSign ? `Send recognized sign "${recognizedSign}" to AI tutor conversation` : 'Send sign to conversation (disabled until gesture detected)'}
+          className="w-full justify-center shadow-warm-sm min-h-[44px]"
         >
-          <Send className="h-4 w-4 mr-2" />
+          <Send className="h-4 w-4 mr-2" aria-hidden="true" />
           Send to Conversation
         </Button>
       </div>

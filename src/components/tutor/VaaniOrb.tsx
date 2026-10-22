@@ -78,8 +78,27 @@ export function VaaniOrb({ status, onClick, disabled }: VaaniOrbProps) {
         {/* Main interactive orb */}
         <button
           onClick={onClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!disabled) onClick();
+            }
+          }}
           disabled={disabled}
           type="button"
+          role="button"
+          aria-label={
+            status === 'listening'
+              ? 'Voice tutor is listening. Tap or press Enter to finish speaking.'
+              : status === 'speaking'
+              ? 'Voice tutor is speaking. Tap or press Enter to interrupt and speak.'
+              : status === 'processing'
+              ? 'Voice tutor is thinking. Please wait.'
+              : status === 'error'
+              ? 'Voice input error occurred. Tap or press Enter to try speaking again.'
+              : 'Voice tutor is ready. Tap or press Enter to start speaking English.'
+          }
+          aria-busy={status === 'processing'}
           title={
             status === 'listening'
               ? 'Tap to finish speaking & submit'
@@ -88,11 +107,11 @@ export function VaaniOrb({ status, onClick, disabled }: VaaniOrbProps) {
               : 'Tap to speak'
           }
           className={`relative z-10 w-32 h-32 rounded-full bg-gradient-to-tr ${cfg.gradient} text-cream-white
-            shadow-2xl ${cfg.glow} transition-all duration-300 ease-out transform
+            shadow-2xl ${cfg.glow} transition-all duration-300 ease-out transform min-h-[44px] min-w-[44px]
             ${
               disabled
                 ? 'cursor-not-allowed opacity-80'
-                : 'hover:scale-105 active:scale-95 cursor-pointer'
+                : 'hover:scale-105 active:scale-95 cursor-pointer focus-visible:ring-4 focus-visible:ring-terracotta'
             }
             border-2 border-cream-white/40 flex items-center justify-center`}
         >

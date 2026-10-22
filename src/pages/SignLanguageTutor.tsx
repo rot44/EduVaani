@@ -181,18 +181,18 @@ export default function SignLanguageTutor() {
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-sm font-semibold text-deep-brown/70 hover:text-terracotta transition-colors group"
+              className="inline-flex items-center min-h-[44px] px-2 text-sm font-semibold text-deep-brown/80 hover:text-terracotta transition-colors group"
             >
-              <ArrowLeft className="h-4 w-4 mr-1.5 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="h-4 w-4 mr-1.5 group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
               Back to Dashboard
             </Link>
 
             <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to="/voice-tutor"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-warm-sand/50 hover:bg-peacock-teal/15 text-deep-brown hover:text-peacock-teal text-xs font-bold border border-warm-sand transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 min-h-[44px] rounded-xl bg-warm-sand/50 hover:bg-peacock-teal/15 text-deep-brown hover:text-peacock-teal text-xs font-bold border border-warm-sand transition-all"
               >
-                <span>🎙️</span>
+                <span aria-hidden="true">🎙️</span>
                 <span>Voice & Text Tutor</span>
               </Link>
               <Badge variant="teal" className="text-xs font-bold">
@@ -316,7 +316,7 @@ export default function SignLanguageTutor() {
             <div className="flex items-center gap-2">
               <Link
                 to="/voice-tutor"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-peacock-teal text-cream-white hover:bg-peacock-teal/90 text-xs font-bold shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-xl bg-peacock-teal text-cream-white hover:bg-peacock-teal/90 text-xs font-bold shadow-xs transition-colors"
               >
                 <span>🎙️ Open in Voice Tutor</span>
               </Link>
@@ -324,7 +324,8 @@ export default function SignLanguageTutor() {
                 <button
                   type="button"
                   onClick={() => multimodalManager.clearConversation()}
-                  className="px-3 py-1.5 rounded-xl border border-warm-sand bg-cream-white hover:border-terracotta text-xs font-semibold text-deep-brown/70 hover:text-terracotta transition-colors cursor-pointer"
+                  className="px-4 min-h-[44px] rounded-xl border border-warm-sand bg-cream-white hover:border-terracotta text-xs font-semibold text-deep-brown/80 hover:text-terracotta transition-colors cursor-pointer"
+                  aria-label="Clear conversation history"
                 >
                   Clear History
                 </button>

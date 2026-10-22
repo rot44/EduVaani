@@ -73,16 +73,22 @@ export function ScenarioGrid({
         </div>
 
         {/* Filter Pills: active = terracotta fill, inactive = warm sand */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-warm-sand/50 border border-warm-sand">
-          <Filter className="h-3.5 w-3.5 text-deep-brown/50 ml-2 mr-1" />
+        <div
+          role="tablist"
+          aria-label="Scenario categories"
+          className="flex items-center gap-1.5 p-1 rounded-2xl bg-warm-sand/50 border border-warm-sand max-w-full overflow-x-auto pb-1.5 scrollbar-none flex-nowrap sm:flex-wrap"
+        >
+          <Filter className="h-3.5 w-3.5 text-deep-brown/50 ml-2 mr-1 flex-shrink-0" aria-hidden="true" />
           {filterTabs.map((tab) => {
             const isActive = currentFilter === tab.id;
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => onFilterChange(tab.id)}
                 type="button"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer min-h-[44px] flex-shrink-0 flex items-center justify-center ${
                   isActive
                     ? 'bg-terracotta text-cream-white shadow-warm-sm'
                     : 'text-deep-brown/75 hover:text-deep-brown hover:bg-warm-sand'
@@ -105,7 +111,8 @@ export function ScenarioGrid({
               key={scenario.id}
               onClick={() => onStartScenario(scenario.id)}
               type="button"
-              className="group rounded-3xl border border-warm-sand bg-warm-ivory hover:border-terracotta/40 p-5 sm:p-6 text-left transition-all duration-300 shadow-warm-sm hover:shadow-warm-md flex flex-col justify-between relative overflow-hidden cursor-pointer"
+              aria-label={`Practice scenario: ${scenario.title}. ${scenario.description}`}
+              className="group rounded-3xl border border-warm-sand bg-warm-ivory hover:border-terracotta/40 p-5 sm:p-6 text-left transition-all duration-300 shadow-warm-sm hover:shadow-warm-md flex flex-col justify-between relative overflow-hidden cursor-pointer focus-visible:ring-2 focus-visible:ring-terracotta"
             >
               {/* Top Details */}
               <div>

@@ -20,9 +20,9 @@ export default function Analytics() {
         <div className="mb-6">
           <Link
             to="/dashboard"
-            className="inline-flex items-center text-sm font-semibold text-deep-brown/70 hover:text-terracotta transition-colors"
+            className="inline-flex items-center min-h-[44px] px-2 text-sm font-semibold text-deep-brown/80 hover:text-terracotta transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ArrowLeft className="h-4 w-4 mr-1.5" aria-hidden="true" />
             Back to Dashboard
           </Link>
         </div>
@@ -39,9 +39,9 @@ export default function Analytics() {
         <div className="grid sm:grid-cols-3 gap-6 mt-8">
           <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-6 shadow-warm-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-deep-brown/65 uppercase tracking-wider">Active Streak</span>
+              <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider">Active Streak</span>
               <div className="w-10 h-10 rounded-2xl bg-terracotta/15 text-terracotta flex items-center justify-center">
-                <Flame className="h-5 w-5" />
+                <Flame className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-deep-brown font-display">{streak} Days</div>
@@ -50,24 +50,24 @@ export default function Analytics() {
 
           <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-6 shadow-warm-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-deep-brown/65 uppercase tracking-wider">Time Spoken</span>
+              <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider">Time Spoken</span>
               <div className="w-10 h-10 rounded-2xl bg-peacock-teal/15 text-peacock-teal flex items-center justify-center">
-                <Clock className="h-5 w-5" />
+                <Clock className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-deep-brown font-display">{minutes} mins</div>
-            <p className="text-xs text-deep-brown/60 font-medium mt-1">Total spoken conversational practice</p>
+            <p className="text-xs text-deep-brown/75 font-medium mt-1">Total spoken conversational practice</p>
           </div>
 
           <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-6 shadow-warm-sm">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-deep-brown/65 uppercase tracking-wider">Sessions</span>
+              <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider">Sessions</span>
               <div className="w-10 h-10 rounded-2xl bg-turmeric/20 text-deep-brown flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-turmeric-dark" />
+                <Trophy className="h-5 w-5 text-turmeric-dark" aria-hidden="true" />
               </div>
             </div>
             <div className="text-3xl font-extrabold text-deep-brown font-display">{sessions} Completed</div>
-            <p className="text-xs text-deep-brown/60 font-medium mt-1">Real-world scenarios conquered</p>
+            <p className="text-xs text-deep-brown/75 font-medium mt-1">Real-world scenarios conquered</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ export default function Analytics() {
           </div>
 
           <div className="pt-2">
-            <Button asChild variant="primary">
+            <Button asChild variant="primary" className="min-h-[44px] px-6">
               <Link to="/dashboard">
                 Continue Practice Session
               </Link>

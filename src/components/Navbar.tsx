@@ -34,6 +34,18 @@ export function Navbar() {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Close mobile drawer on Escape key
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -62,6 +74,7 @@ export function Navbar() {
 
   return (
     <nav
+      aria-label="Main navigation"
       className={`sticky top-0 z-50 w-full transition-all duration-300 border-b ${
         isScrolled
           ? 'bg-cream-white/95 backdrop-blur-md border-warm-sand shadow-warm-md'
@@ -72,10 +85,10 @@ export function Navbar() {
         <div className="flex h-16 sm:h-18 items-center justify-between">
           
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" aria-label="EduVaani - Go to home" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="w-10 h-10 bg-gradient-to-br from-terracotta to-turmeric rounded-2xl flex items-center justify-center text-cream-white shadow-warm-sm group-hover:scale-105 transition-all duration-300">
-                <Mic className="h-5 w-5" />
+                <Mic className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
             <div>
@@ -89,7 +102,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-1.5">
+          <div className="hidden md:flex items-center gap-1.5" role="menubar">
             {navLinks.map((link) => {
               const active = isActive(link.href);
               const Icon = link.icon;
@@ -97,14 +110,16 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+                  aria-current={active ? 'page' : undefined}
+                  role="menuitem"
+                  className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
                     active
                       ? 'bg-warm-sand/70 text-terracotta font-bold shadow-warm-sm'
-                      : 'text-deep-brown/75 hover:text-deep-brown hover:bg-warm-sand/40'
+                      : 'text-deep-brown/80 hover:text-deep-brown hover:bg-warm-sand/40'
                   }`}
                 >
-                  {Icon && <Icon className="h-4 w-4" />}
-                  {link.badge && <span className="text-sm">{link.badge}</span>}
+                  {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+                  {link.badge && <span className="text-sm" aria-hidden="true">{link.badge}</span>}
                   <span>{link.name}</span>
                 </Link>
               );
@@ -118,12 +133,13 @@ export function Navbar() {
                 {/* User Avatar with Circular Goal Progress Ring */}
                 <Link
                   to="/dashboard"
-                  className="flex items-center gap-2.5 p-1 rounded-full hover:bg-warm-sand/40 transition-colors group"
+                  className="flex items-center gap-2.5 p-1 rounded-full hover:bg-warm-sand/40 transition-colors group min-h-[44px]"
                   title={`Daily Goal: ${minutes}m / 15m (${progressPercent}%)`}
+                  aria-label={`Profile and daily goal: ${minutes} of 15 minutes practiced (${progressPercent}%)`}
                 >
                   <div className="relative w-11 h-11 flex items-center justify-center">
                     {/* SVG Circular Progress Ring */}
-                    <svg className="w-11 h-11 -rotate-90" viewBox="0 0 48 48">
+                    <svg className="w-11 h-11 -rotate-90" viewBox="0 0 48 48" aria-hidden="true">
                       <circle
                         cx="24"
                         cy="24"
@@ -148,7 +164,8 @@ export function Navbar() {
                     {/* Center Avatar Image */}
                     <img
                       src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`}
-                      alt={user.name}
+                      alt=""
+                      aria-hidden="true"
                       className="absolute w-8 h-8 rounded-full object-cover"
                     />
                   </div>
@@ -166,17 +183,17 @@ export function Navbar() {
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className="w-9 h-9 bg-warm-ivory border border-warm-sand hover:border-soft-coral/50 rounded-full flex items-center justify-center text-deep-brown/70 hover:text-soft-coral transition-colors shadow-warm-sm"
+                  className="min-w-[44px] min-h-[44px] bg-warm-ivory border border-warm-sand hover:border-terracotta/40 rounded-full flex items-center justify-center text-deep-brown/80 hover:text-terracotta transition-colors shadow-warm-sm cursor-pointer"
                   title="Logout"
                   aria-label="Logout"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             ) : (
-              <Button asChild size="sm" variant="primary" className="rounded-full shadow-terracotta px-5 hidden sm:inline-flex">
+              <Button asChild size="sm" variant="primary" className="rounded-full shadow-terracotta px-5 min-h-[44px] hidden sm:inline-flex">
                 <Link to="/login">
-                  <User className="h-4 w-4 mr-1.5" />
+                  <User className="h-4 w-4 mr-1.5" aria-hidden="true" />
                   Start Speaking Free
                 </Link>
               </Button>
@@ -185,10 +202,12 @@ export function Navbar() {
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden w-10 h-10 rounded-2xl bg-warm-ivory border border-warm-sand flex items-center justify-center text-deep-brown hover:bg-warm-sand/60 transition-colors shadow-warm-sm"
-              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
+              className="md:hidden min-w-[44px] min-h-[44px] rounded-2xl bg-warm-ivory border border-warm-sand flex items-center justify-center text-deep-brown hover:bg-warm-sand/60 transition-colors shadow-warm-sm cursor-pointer"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
 
@@ -199,13 +218,14 @@ export function Navbar() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            id="mobile-navigation-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="md:hidden border-t border-warm-sand bg-warm-ivory/98 backdrop-blur-xl px-4 py-5 shadow-warm-lg overflow-hidden"
           >
-            <div className="space-y-2">
+            <div className="space-y-2" role="menu">
               {navLinks.map((link) => {
                 const active = isActive(link.href);
                 const Icon = link.icon;
@@ -213,14 +233,16 @@ export function Navbar() {
                   <Link
                     key={link.name}
                     to={link.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${
+                    role="menuitem"
+                    aria-current={active ? 'page' : undefined}
+                    className={`flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-2xl text-sm font-semibold transition-colors ${
                       active
                         ? 'bg-warm-sand text-terracotta font-bold'
                         : 'text-deep-brown hover:bg-warm-sand/50'
                     }`}
                   >
-                    {Icon && <Icon className="h-4 w-4 text-terracotta" />}
-                    {link.badge && <span className="text-base">{link.badge}</span>}
+                    {Icon && <Icon className="h-4 w-4 text-terracotta" aria-hidden="true" />}
+                    {link.badge && <span className="text-base" aria-hidden="true">{link.badge}</span>}
                     <span>{link.name}</span>
                   </Link>
                 );
@@ -232,7 +254,8 @@ export function Navbar() {
                     <div className="flex items-center gap-3">
                       <img
                         src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`}
-                        alt={user.name}
+                        alt=""
+                        aria-hidden="true"
                         className="w-10 h-10 rounded-full"
                       />
                       <div>
@@ -244,16 +267,17 @@ export function Navbar() {
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="p-2 text-soft-coral hover:bg-soft-coral/10 rounded-xl transition-colors"
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center text-terracotta hover:bg-terracotta/10 rounded-xl transition-colors cursor-pointer"
                       title="Log Out"
+                      aria-label="Log Out"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                 ) : (
-                  <Button asChild size="lg" variant="primary" className="w-full justify-center">
+                  <Button asChild size="lg" variant="primary" className="w-full min-h-[44px] justify-center">
                     <Link to="/login">
-                      <User className="h-4 w-4 mr-2" />
+                      <User className="h-4 w-4 mr-2" aria-hidden="true" />
                       Start Speaking Free
                     </Link>
                   </Button>

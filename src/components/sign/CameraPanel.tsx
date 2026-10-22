@@ -42,6 +42,22 @@ export function CameraPanel({
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [currentEngine, setCurrentEngine] = useState<RecognitionEngineType>(getRecognitionEngine());
 
+  // Resize and orientation listener for mobile video & canvas
+  useEffect(() => {
+    const handleResize = () => {
+      if (videoRef.current && canvasRef.current) {
+        canvasRef.current.width = videoRef.current.videoWidth || 640;
+        canvasRef.current.height = videoRef.current.videoHeight || 480;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
   // Stop media tracks and recognition pipeline
   const stopMediaTracks = useCallback(() => {
     stopRecognition();
@@ -185,9 +201,10 @@ export function CameraPanel({
               onClick={stopCamera}
               variant="outline"
               size="sm"
-              className="border-soft-coral/40 text-soft-coral hover:bg-soft-coral/10 hover:border-soft-coral rounded-xl text-xs h-9 px-3.5"
+              aria-label="Stop webcam camera"
+              className="border-soft-coral/40 text-soft-coral hover:bg-soft-coral/10 hover:border-soft-coral rounded-xl text-xs min-h-[44px] px-3.5"
             >
-              <VideoOff className="h-4 w-4 mr-1.5" />
+              <VideoOff className="h-4 w-4 mr-1.5" aria-hidden="true" />
               Stop Camera
             </Button>
           ) : (
@@ -196,22 +213,29 @@ export function CameraPanel({
               variant="secondary"
               size="sm"
               disabled={isStarting}
-              className="rounded-xl text-xs h-9 px-4 shadow-warm-sm"
+              aria-label="Start webcam camera for ISL gesture detection"
+              className="rounded-xl text-xs min-h-[44px] px-4 shadow-warm-sm"
             >
               {isStarting ? (
                 <>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" aria-hidden="true" />
                   Connecting...
                 </>
               ) : (
                 <>
-                  <Camera className="h-3.5 w-3.5 mr-1.5" />
+                  <Camera className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
                   Start Camera
                 </>
               )}
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Screen Reader Live Region for Camera Status */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {isCameraActive ? 'Webcam is active and tracking hands.' : 'Webcam is inactive.'}
+        {errorMessage && `Camera notice: ${errorMessage}`}
       </div>
 
       {/* Model Loading Progress Bar */}

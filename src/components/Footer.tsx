@@ -33,24 +33,24 @@ export function Footer() {
           
           {/* Column 1: Brand & About (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
-            <Link to="/" className="inline-flex items-center gap-3 group">
+            <Link to="/" aria-label="EduVaani - Go to home" className="inline-flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-terracotta to-turmeric flex items-center justify-center text-cream-white shadow-warm-sm group-hover:scale-105 transition-transform">
-                <Mic className="h-5 w-5" />
+                <Mic className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
                 <span className="text-xl font-extrabold font-display text-deep-brown block">
                   EduVaani <span className="text-sm font-semibold text-terracotta font-sans">(एजुवाणी)</span>
                 </span>
-                <span className="text-xs text-deep-brown/65 block -mt-0.5">आपकी आवाज़, आपकी पहचान</span>
+                <span className="text-xs text-deep-brown/75 block -mt-0.5">आपकी आवाज़, आपकी पहचान</span>
               </div>
             </Link>
 
-            <p className="text-sm text-deep-brown/75 leading-relaxed font-sans max-w-sm">
+            <p className="text-sm text-deep-brown/80 leading-relaxed font-sans max-w-sm">
               India&apos;s culturally grounded AI English voice tutor. Practice speaking fearlessly in authentic Indian scenarios with instant translations and pronunciation coaching.
             </p>
 
             <div className="flex items-center gap-2 text-xs font-semibold text-peacock-teal">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Powered by Gemini & Sarvam AI</span>
             </div>
           </div>
@@ -60,30 +60,30 @@ export function Footer() {
             <h4 className="text-sm font-bold font-display uppercase tracking-wider text-deep-brown">
               Product & Practice
             </h4>
-            <ul className="space-y-2 text-sm text-deep-brown/75 font-sans">
+            <ul className="space-y-2 text-sm text-deep-brown/80 font-sans">
               <li>
-                <Link to="/" className="hover:text-terracotta transition-colors">
+                <Link to="/" className="inline-block py-1 hover:text-terracotta transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard" className="hover:text-terracotta transition-colors">
+                <Link to="/dashboard" className="inline-block py-1 hover:text-terracotta transition-colors">
                   Voice Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/sign-tutor" className="hover:text-terracotta transition-colors flex items-center gap-1.5">
+                <Link to="/sign-tutor" className="inline-flex items-center gap-1.5 py-1 hover:text-terracotta transition-colors">
                   <span>Sign Language</span>
-                  <span className="text-xs">🤟</span>
+                  <span className="text-xs" aria-hidden="true">🤟</span>
                 </Link>
               </li>
               <li>
-                <Link to="/analytics" className="hover:text-terracotta transition-colors">
+                <Link to="/analytics" className="inline-block py-1 hover:text-terracotta transition-colors">
                   Learning Analytics
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-terracotta transition-colors">
+                <Link to="/login" className="inline-block py-1 hover:text-terracotta transition-colors">
                   Student Sign In
                 </Link>
               </li>
@@ -93,10 +93,10 @@ export function Footer() {
           {/* Column 3: 8 Indian Languages (3 cols) */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="text-sm font-bold font-display uppercase tracking-wider text-deep-brown flex items-center gap-1.5">
-              <Globe className="h-4 w-4 text-peacock-teal" />
+              <Globe className="h-4 w-4 text-peacock-teal" aria-hidden="true" />
               8 Languages
             </h4>
-            <p className="text-xs text-deep-brown/65">
+            <p className="text-xs text-deep-brown/75">
               Bilingual translations & audio voice support:
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -104,7 +104,7 @@ export function Footer() {
                 <Badge
                   key={lang.code}
                   variant="outline"
-                  className="text-[11px] py-0.5 px-2 bg-cream-white/70 hover:border-terracotta/40 transition-colors"
+                  className="text-[11px] py-1 px-2.5 bg-cream-white/70 hover:border-terracotta/40 transition-colors"
                 >
                   <span className="font-semibold">{lang.nativeName}</span>
                 </Badge>
@@ -122,24 +122,24 @@ export function Footer() {
                 href="https://github.com/rot44/EduVaani"
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-warm-sand bg-cream-white hover:bg-warm-ivory flex items-center justify-center text-deep-brown hover:text-terracotta transition-colors shadow-warm-sm"
+                className="min-w-[44px] min-h-[44px] rounded-xl border border-warm-sand bg-cream-white hover:bg-warm-ivory flex items-center justify-center text-deep-brown hover:text-terracotta transition-colors shadow-warm-sm"
                 title="GitHub"
-                aria-label="GitHub Repository"
+                aria-label="GitHub Repository (opens in new tab)"
               >
-                <GithubIcon className="h-4 w-4" />
+                <GithubIcon className="h-4.5 w-4.5" />
               </a>
               <a
                 href="https://twitter.com"
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-warm-sand bg-cream-white hover:bg-warm-ivory flex items-center justify-center text-deep-brown hover:text-terracotta transition-colors shadow-warm-sm"
+                className="min-w-[44px] min-h-[44px] rounded-xl border border-warm-sand bg-cream-white hover:bg-warm-ivory flex items-center justify-center text-deep-brown hover:text-terracotta transition-colors shadow-warm-sm"
                 title="Twitter / X"
-                aria-label="Twitter profile"
+                aria-label="Twitter profile (opens in new tab)"
               >
-                <TwitterXIcon className="h-4 w-4" />
+                <TwitterXIcon className="h-4.5 w-4.5" />
               </a>
             </div>
-            <p className="text-xs text-deep-brown/60 pt-2 leading-relaxed">
+            <p className="text-xs text-deep-brown/75 pt-2 leading-relaxed">
               Open source & privacy-first. Stored securely on your device.
             </p>
           </div>

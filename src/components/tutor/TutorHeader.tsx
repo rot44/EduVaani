@@ -60,43 +60,52 @@ export function TutorHeader({
         <div className="bg-warm-sand/50 border border-warm-sand rounded-full p-1 flex items-center shadow-inner gap-1">
           <button
             type="button"
+            role="tab"
+            aria-selected={inputMode === 'voice'}
+            aria-label="Switch input mode to Voice"
             onClick={() => onInputModeChange('voice')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px] ${
               inputMode === 'voice'
                 ? 'bg-terracotta text-cream-white shadow-warm-sm font-bold scale-102'
-                : 'text-deep-brown/70 hover:text-deep-brown hover:bg-warm-sand/40'
+                : 'text-deep-brown/75 hover:text-deep-brown hover:bg-warm-sand/40'
             }`}
             title="Voice input via microphone & interactive orb"
           >
-            <span>🎙️</span>
+            <span aria-hidden="true">🎙️</span>
             <span>Voice</span>
           </button>
           
           <button
             type="button"
+            role="tab"
+            aria-selected={inputMode === 'text'}
+            aria-label="Switch input mode to Text"
             onClick={() => onInputModeChange('text')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px] ${
               inputMode === 'text'
                 ? 'bg-terracotta text-cream-white shadow-warm-sm font-bold scale-102'
-                : 'text-deep-brown/70 hover:text-deep-brown hover:bg-warm-sand/40'
+                : 'text-deep-brown/75 hover:text-deep-brown hover:bg-warm-sand/40'
             }`}
             title="Text input & transcript chat"
           >
-            <span>💬</span>
+            <span aria-hidden="true">💬</span>
             <span>Text</span>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={inputMode === 'sign'}
+            aria-label="Switch input mode to Indian Sign Language"
             onClick={() => onInputModeChange('sign')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px] ${
               inputMode === 'sign'
                 ? 'bg-terracotta text-cream-white shadow-warm-sm font-bold scale-102'
-                : 'text-deep-brown/70 hover:text-deep-brown hover:bg-warm-sand/40'
+                : 'text-deep-brown/75 hover:text-deep-brown hover:bg-warm-sand/40'
             }`}
             title="Sign language input via camera gesture detection"
           >
-            <span>🤟</span>
+            <span aria-hidden="true">🤟</span>
             <span>Sign</span>
           </button>
         </div>
@@ -104,19 +113,25 @@ export function TutorHeader({
         {/* Right Action Controls: Output Mode Selector, Voice Engine, Mic Check, Finish */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Output Mode Switcher Pill */}
-          <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-cream-white border border-warm-sand text-[11px] shadow-xs">
-            <span className="text-deep-brown/50 font-medium flex items-center gap-1 pl-1">
-              <Volume2 className="h-3 w-3" /> Output:
+          <div
+            role="group"
+            aria-label="Tutor response output mode"
+            className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-full bg-cream-white border border-warm-sand text-[11px] shadow-xs min-h-[44px]"
+          >
+            <span className="text-deep-brown/65 font-medium flex items-center gap-1 pl-1">
+              <Volume2 className="h-3 w-3" aria-hidden="true" /> Output:
             </span>
             {(['all', 'voice', 'sign', 'text'] as OutputMode[]).map((mode) => (
               <button
                 key={mode}
                 type="button"
+                aria-pressed={outputMode === mode}
+                aria-label={`Deliver responses as ${mode}`}
                 onClick={() => onOutputModeChange(mode)}
-                className={`px-2 py-0.5 rounded-full capitalize font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded-full capitalize font-semibold transition-colors cursor-pointer text-xs ${
                   outputMode === mode
                     ? 'bg-peacock-teal text-cream-white shadow-xs'
-                    : 'text-deep-brown/70 hover:text-deep-brown'
+                    : 'text-deep-brown/75 hover:text-deep-brown'
                 }`}
                 title={`Deliver tutor responses as ${mode}`}
               >
@@ -130,7 +145,8 @@ export function TutorHeader({
             <button
               type="button"
               onClick={onToggleVoiceEngine}
-              className={`border rounded-full px-2.5 py-1 text-xs font-semibold transition-all cursor-pointer shadow-sm ${
+              aria-label={`Switch voice engine. Currently: ${voiceEngine === 'sarvam' ? 'Sarvam Bulbul' : 'Browser TTS'}`}
+              className={`border rounded-full px-3 py-2 text-xs font-semibold transition-all cursor-pointer shadow-sm min-h-[44px] ${
                 voiceEngine === 'sarvam'
                   ? 'border-terracotta/40 bg-terracotta/15 text-terracotta'
                   : 'border-warm-sand bg-cream-white text-deep-brown/75 hover:bg-warm-sand/40'
@@ -145,10 +161,11 @@ export function TutorHeader({
           <button
             type="button"
             onClick={onMicCheck}
-            className="border border-peacock-teal/30 bg-peacock-teal/10 hover:bg-peacock-teal/20 text-peacock-teal rounded-full px-2.5 py-1 text-xs flex items-center gap-1 transition-all cursor-pointer shadow-sm font-medium"
+            aria-label="Run microphone diagnostic check"
+            className="border border-peacock-teal/30 bg-peacock-teal/10 hover:bg-peacock-teal/20 text-peacock-teal rounded-full px-3 py-2 text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm font-semibold min-h-[44px]"
             title="Test microphone volume & diagnostics"
           >
-            <Mic className="h-3 w-3 text-peacock-teal" />
+            <Mic className="h-3.5 w-3.5 text-peacock-teal" aria-hidden="true" />
             <span className="hidden sm:inline">Mic Check</span>
           </button>
 
@@ -162,11 +179,11 @@ export function TutorHeader({
           <button
             type="button"
             onClick={onFinishSession}
-            className="border border-warm-sand bg-cream-white hover:border-soft-coral hover:bg-soft-coral/10 text-deep-brown/70 hover:text-soft-coral rounded-full p-1.5 transition-colors cursor-pointer shadow-sm"
-            title="Finish session & return"
-            aria-label="Finish session"
+            className="border border-warm-sand bg-cream-white hover:border-soft-coral hover:bg-soft-coral/10 text-deep-brown/75 hover:text-soft-coral rounded-full p-2.5 transition-colors cursor-pointer shadow-sm min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-soft-coral"
+            title="Finish session & return to dashboard"
+            aria-label="Finish session and return to dashboard"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 

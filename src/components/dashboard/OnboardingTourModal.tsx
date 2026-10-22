@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, ArrowLeft, X, Check, Compass } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -50,8 +50,58 @@ interface OnboardingTourModalProps {
 
 export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   const currentStep = TOUR_STEPS[currentStepIndex];
+
+  // Store trigger element and handle Escape & focus restoration
+  useEffect(() => {
+    if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement;
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleDismiss();
+          return;
+        }
+
+        // Focus trap
+        if (e.key === 'Tab' && modalRef.current) {
+          const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen]);
+
+  const handleDismiss = () => {
+    onDismiss();
+    setTimeout(() => {
+      triggerElementRef.current?.focus();
+    }, 50);
+  };
 
   // Scroll target element into view whenever current step changes
   useEffect(() => {
@@ -73,7 +123,7 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
     if (currentStepIndex < TOUR_STEPS.length - 1) {
       setCurrentStepIndex((prev) => prev + 1);
     } else {
-      onDismiss();
+      handleDismiss();
     }
   };
 
@@ -84,8 +134,15 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-deep-brown/50 backdrop-blur-xs animate-fade-in">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tour-dialog-heading"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-deep-brown/50 backdrop-blur-xs animate-fade-in"
+      onClick={handleDismiss}
+    >
       <div
+        ref={modalRef}
         className="w-full max-w-lg bg-warm-ivory border border-warm-sand rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
@@ -95,8 +152,8 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
         {/* Top Header Row */}
         <div className="flex items-center justify-between mb-4 relative z-10">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-terracotta/15 text-terracotta flex items-center justify-center">
-              <Compass className="h-4 w-4" />
+            <div className="w-9 h-9 rounded-xl bg-terracotta/15 text-terracotta flex items-center justify-center" aria-hidden="true">
+              <Compass className="h-4.5 w-4.5" />
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-peacock-teal font-display">
@@ -106,9 +163,9 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
           </div>
 
           <button
-            onClick={onDismiss}
-            className="p-1.5 text-deep-brown/50 hover:text-deep-brown hover:bg-warm-sand/50 rounded-xl transition-colors cursor-pointer"
-            aria-label="Skip tour"
+            onClick={handleDismiss}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-deep-brown/60 hover:text-deep-brown hover:bg-warm-sand/50 rounded-xl transition-colors cursor-pointer"
+            aria-label="Skip and close tour"
           >
             <X className="h-5 w-5" />
           </button>
@@ -127,7 +184,7 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
             <div className="flex items-center gap-3">
               <span className="text-3xl sm:text-4xl">{currentStep.emoji}</span>
               <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-deep-brown font-display tracking-tight">
+                <h3 id="tour-dialog-heading" className="text-xl sm:text-2xl font-extrabold text-deep-brown font-display tracking-tight">
                   {currentStep.heading}
                 </h3>
                 <Badge variant="teal" className="text-[10px] font-bold mt-0.5">
@@ -150,18 +207,24 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
         {/* Tour Navigation Controls */}
         <div className="mt-6 pt-4 border-t border-warm-sand/80 flex items-center justify-between gap-3 relative z-10">
           {/* Step Dots */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" role="tablist" aria-label="Tour steps">
             {TOUR_STEPS.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentStepIndex(idx)}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  idx === currentStepIndex
-                    ? 'w-6 bg-terracotta'
-                    : 'w-2 bg-warm-sand hover:bg-warm-sand-dark'
-                }`}
+                className="min-h-[44px] min-w-[32px] sm:min-w-[44px] flex items-center justify-center cursor-pointer group"
                 aria-label={`Go to step ${idx + 1}`}
-              />
+                role="tab"
+                aria-selected={idx === currentStepIndex}
+              >
+                <span
+                  className={`h-2 rounded-full transition-all ${
+                    idx === currentStepIndex
+                      ? 'w-6 bg-terracotta'
+                      : 'w-2.5 bg-warm-sand group-hover:bg-warm-sand-dark'
+                  }`}
+                />
+              </button>
             ))}
           </div>
 
@@ -171,7 +234,8 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
                 variant="outline"
                 size="sm"
                 onClick={handlePrev}
-                className="text-xs rounded-xl"
+                aria-label="Previous step"
+                className="text-xs rounded-xl min-h-[44px] px-3.5"
               >
                 <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                 Back
@@ -179,8 +243,9 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
             ) : (
               <button
                 type="button"
-                onClick={onDismiss}
-                className="text-xs font-bold text-deep-brown/60 hover:text-deep-brown px-3 py-1.5 transition-colors cursor-pointer"
+                onClick={handleDismiss}
+                className="text-xs font-bold text-deep-brown/70 hover:text-deep-brown min-h-[44px] px-3.5 flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Skip tour"
               >
                 Skip Tour
               </button>
@@ -190,7 +255,8 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
               variant="primary"
               size="sm"
               onClick={handleNext}
-              className="text-xs rounded-xl shadow-warm-sm"
+              aria-label={currentStepIndex < TOUR_STEPS.length - 1 ? 'Next step' : 'Complete tour'}
+              className="text-xs rounded-xl shadow-warm-sm min-h-[44px] px-4"
             >
               {currentStepIndex < TOUR_STEPS.length - 1 ? (
                 <>

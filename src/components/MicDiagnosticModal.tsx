@@ -26,6 +26,13 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement;
+    }
+  }, [isOpen]);
 
   const teardownAudioHardware = () => {
     if (animFrameRef.current) {
@@ -49,6 +56,9 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
     setMicState('idle');
     setHeardText('');
     onClose();
+    setTimeout(() => {
+      triggerElementRef.current?.focus();
+    }, 50);
   };
 
   useEffect(() => {
@@ -131,15 +141,26 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="max-w-md">
+        {/* Screen Reader Live Region */}
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          {micState === 'listening' && 'Microphone listening. Please speak into your microphone.'}
+          {micState === 'success' && 'Microphone active and working successfully.'}
+          {micState === 'denied' && 'Microphone access denied. Please allow microphone permissions in your browser.'}
+          {heardText && `Microphone recognized: ${heardText}`}
+          {isSpeakerTesting && 'Testing audio output now.'}
+        </div>
+
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
-              <Mic className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-terracotta/10 border border-terracotta/30 flex items-center justify-center text-terracotta flex-shrink-0">
+              <Mic className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <DialogTitle>Audio & Mic Diagnostic</DialogTitle>
-              <DialogDescription>
-                Verify that your microphone and speakers work smoothly.
+              <DialogTitle className="text-deep-brown font-display font-semibold text-lg">
+                Audio & Mic Diagnostic
+              </DialogTitle>
+              <DialogDescription className="text-deep-brown/70 text-xs">
+                Verify that your microphone and speakers work smoothly for voice practice.
               </DialogDescription>
             </div>
           </div>
@@ -147,9 +168,9 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
 
         <div className="space-y-4 py-2">
           {/* Live Mic Level Meter */}
-          <div className="glass border border-white/10 rounded-2xl p-4 space-y-3">
+          <div className="bg-cream-white border border-warm-sand rounded-2xl p-4 space-y-3 shadow-warm-sm">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-white/70 font-medium">Microphone Input Level</span>
+              <span className="text-deep-brown font-medium">Microphone Input Level</span>
               <Badge
                 variant={micState === 'success' ? 'saffron' : micState === 'denied' ? 'destructive' : 'outline'}
                 className="text-[11px]"
@@ -162,14 +183,21 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
             </div>
 
             {/* Level Bars */}
-            <div className="h-4 bg-slate-950/80 rounded-full overflow-hidden p-0.5 border border-white/10 flex items-center">
+            <div 
+              className="h-4 bg-warm-sand/80 rounded-full overflow-hidden p-0.5 border border-warm-sand flex items-center"
+              role="progressbar"
+              aria-valuenow={audioLevel}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Microphone input volume"
+            >
               <div
                 className={`h-full rounded-full transition-all duration-75 ${
                   audioLevel > 60
-                    ? 'bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500'
+                    ? 'bg-gradient-to-r from-peacock-teal via-turmeric to-terracotta'
                     : audioLevel > 20
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                    : 'bg-emerald-500/40'
+                    ? 'bg-gradient-to-r from-peacock-teal to-turmeric'
+                    : 'bg-peacock-teal/60'
                 }`}
                 style={{ width: `${Math.max(4, audioLevel)}%` }}
               />
@@ -177,24 +205,24 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
 
             {/* Status explanation */}
             {micState === 'listening' && (
-              <p className="text-xs text-orange-300/90 animate-pulse text-center">
+              <p className="text-xs text-terracotta font-medium animate-pulse text-center">
                 Speak into your mic: "Hello EduVaani"
               </p>
             )}
 
             {heardText && (
-              <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-xl p-2.5 text-xs text-emerald-200">
+              <div className="bg-peacock-teal/10 border border-peacock-teal/30 rounded-xl p-2.5 text-xs text-peacock-teal">
                 <span className="font-semibold">Recognized: </span>
                 <span className="italic">"{heardText}"</span>
               </div>
             )}
 
             {micState === 'denied' && (
-              <div className="bg-red-500/15 border border-red-500/30 rounded-xl p-3 text-xs text-red-200 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-terracotta/10 border border-terracotta/30 rounded-xl p-3 text-xs text-terracotta flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-terracotta flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <div>
                   <p className="font-semibold mb-1">Microphone blocked by browser</p>
-                  <p className="text-[11px] text-white/70">
+                  <p className="text-[11px] text-deep-brown/80">
                     Click the lock or camera icon in your browser address bar and set Microphone to "Allow".
                   </p>
                 </div>
@@ -202,41 +230,42 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
             )}
 
             {micState === 'success' && (
-              <div className="flex items-center gap-2 text-xs text-emerald-300 font-medium">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className="flex items-center gap-2 text-xs text-peacock-teal font-medium">
+                <CheckCircle2 className="h-4 w-4 text-peacock-teal flex-shrink-0" aria-hidden="true" />
                 <span>Microphone is capturing loud and clear audio!</span>
               </div>
             )}
           </div>
 
           {/* Speaker Test */}
-          <div className="glass border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-cream-white border border-warm-sand rounded-2xl p-4 flex items-center justify-between shadow-warm-sm">
             <div>
-              <p className="text-xs font-semibold text-white">Speaker / Audio Output</p>
-              <p className="text-[11px] text-white/60">Test if you can hear the AI tutor's voice</p>
+              <p className="text-xs font-semibold text-deep-brown">Speaker / Audio Output</p>
+              <p className="text-[11px] text-deep-brown/70">Test if you can hear the AI tutor's voice</p>
             </div>
             <Button
               onClick={testSpeaker}
               disabled={isSpeakerTesting}
               variant="outline"
               size="sm"
-              className="text-xs border-orange-400/40 text-orange-200 hover:bg-orange-500/20"
+              aria-label={isSpeakerTesting ? 'Playing speaker test sound' : 'Test speaker audio'}
+              className="text-xs min-h-[44px] px-3.5 border-warm-sand text-deep-brown hover:bg-warm-sand/60 hover:text-deep-brown"
             >
-              <Volume2 className={`h-3.5 w-3.5 mr-1.5 ${isSpeakerTesting ? 'animate-bounce text-emerald-400' : ''}`} />
+              <Volume2 className={`h-4 w-4 mr-1.5 ${isSpeakerTesting ? 'animate-bounce text-peacock-teal' : 'text-terracotta'}`} aria-hidden="true" />
               {isSpeakerTesting ? 'Playing...' : 'Test Sound'}
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-warm-sand">
           <Button
             onClick={startMicTest}
             disabled={testing}
-            variant="glow"
             size="sm"
-            className="w-full text-xs"
+            aria-label={testing ? 'Microphone test running' : 'Start microphone test'}
+            className="w-full text-xs min-h-[44px] bg-terracotta text-cream-white hover:bg-terracotta-hover shadow-warm-sm font-medium"
           >
-            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${testing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${testing ? 'animate-spin' : ''}`} aria-hidden="true" />
             {testing ? 'Testing Microphone...' : 'Start Mic Test'}
           </Button>
 
@@ -244,7 +273,8 @@ export function MicDiagnosticModal({ isOpen, onClose }: MicDiagnosticModalProps)
             onClick={handleClose}
             variant="outline"
             size="sm"
-            className="text-xs border-white/20 text-white/80"
+            aria-label="Done with diagnostic test"
+            className="text-xs min-h-[44px] px-5 border-warm-sand text-deep-brown hover:bg-warm-sand/60 font-medium"
           >
             Done
           </Button>

@@ -210,6 +210,45 @@ body {
 .animate-accordion-down { animation: accordion-down 0.2s ease-out; }
 .animate-accordion-up { animation: accordion-up 0.2s ease-out; }
 
+/* ===== Accessibility: Visible Focus Management ===== */
+:focus-visible {
+  outline: 2px solid var(--color-terracotta, #B94E36) !important;
+  outline-offset: 2px !important;
+}
+
+/* Touch targets: minimum 44x44px for buttons and interactive controls */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="switch"],
+[tabindex="0"] {
+  touch-action: manipulation;
+}
+
+/* Skip-to-content link */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-terracotta, #B94E36);
+  color: var(--color-cream-white, #FFFDF7);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-warm-lg);
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+.skip-to-content:focus {
+  top: 1rem;
+  outline: 2px solid var(--color-cream-white, #FFFDF7) !important;
+  outline-offset: 2px !important;
+}
+
 /* ===== Accessibility: Prefers Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,

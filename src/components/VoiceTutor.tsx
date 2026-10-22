@@ -360,8 +360,23 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         </div>
       )}
 
+      {/* Skip to Content */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to voice controls
+      </a>
+
+      {/* Screen Reader Live Region for Speech Announcements */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {status === 'listening' && 'Listening to your speech... speak your sentence.'}
+        {status === 'processing' && 'Processing your response...'}
+        {status === 'speaking' && `Vaani is speaking: ${lastAssistantMsg?.content || ''}`}
+        {interimSpeech && `Recognized speech: ${interimSpeech}`}
+        {voiceError && `Notice: ${voiceError}`}
+        {error && `Error: ${error}`}
+      </div>
+
       {/* 3. Main Stage: Voice Call (with inline Camera in Sign mode) or Transcript View */}
-      <main className="flex-grow flex flex-col relative z-10 max-w-4xl mx-auto w-full px-4 py-4 overflow-hidden">
+      <main id="main-content" tabIndex={-1} className="flex-grow flex flex-col relative z-10 max-w-4xl mx-auto w-full px-4 py-4 overflow-hidden focus:outline-none">
         {viewMode === 'call' ? (
           <CallView
             status={status}
