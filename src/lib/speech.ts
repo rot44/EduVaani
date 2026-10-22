@@ -22,6 +22,127 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
 
 export type VoiceEngine = 'sarvam' | 'browser';
 
+export function encodePcmToWav(samples: Float32Array, sampleRate: number): Blob {
+  const dataLength = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(buffer);
+
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, 1, true); // Mono channel
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // Byte rate
+  view.setUint16(32, 2, true); // Block align
+  view.setUint16(34, 16, true); // 16-bit
+  writeString(36, 'data');
+  view.setUint32(40, dataLength, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+class AudioRecorder {
+  private audioCtx: AudioContext | null = null;
+  private mediaStream: MediaStream | null = null;
+  private processor: ScriptProcessorNode | null = null;
+  private chunks: Float32Array[] = [];
+  private totalSamples = 0;
+  private isRecording = false;
+
+  async start(): Promise<boolean> {
+    try {
+      this.chunks = [];
+      this.totalSamples = 0;
+      this.isRecording = true;
+
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass || !navigator.mediaDevices?.getUserMedia) return false;
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaStream = stream;
+
+      const ctx = new AudioContextClass({ sampleRate: 16000 });
+      this.audioCtx = ctx;
+
+      const source = ctx.createMediaStreamSource(stream);
+      const processor = ctx.createScriptProcessor(4096, 1, 1);
+      this.processor = processor;
+
+      processor.onaudioprocess = (e) => {
+        if (!this.isRecording) return;
+        const input = e.inputBuffer.getChannelData(0);
+        const copy = new Float32Array(input.length);
+        copy.set(input);
+        this.chunks.push(copy);
+        this.totalSamples += copy.length;
+      };
+
+      source.connect(processor);
+      processor.connect(ctx.destination);
+      return true;
+    } catch (err) {
+      console.warn("Audio recorder init notice:", err);
+      return false;
+    }
+  }
+
+  stop(): Blob | null {
+    this.isRecording = false;
+    if (this.processor) {
+      try { this.processor.disconnect(); } catch {}
+      this.processor = null;
+    }
+    if (this.mediaStream) {
+      try {
+        this.mediaStream.getTracks().forEach(t => t.stop());
+      } catch {}
+      this.mediaStream = null;
+    }
+    const sampleRate = this.audioCtx?.sampleRate || 16000;
+    if (this.audioCtx && this.audioCtx.state !== 'closed') {
+      try { this.audioCtx.close(); } catch {}
+      this.audioCtx = null;
+    }
+
+    if (this.totalSamples < 3200) {
+      return null;
+    }
+
+    const merged = new Float32Array(this.totalSamples);
+    let offset = 0;
+    for (const chunk of this.chunks) {
+      merged.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    let sum = 0;
+    for (let i = 0; i < merged.length; i++) {
+      sum += merged[i] * merged[i];
+    }
+    const rms = Math.sqrt(sum / merged.length);
+    if (rms < 0.002) {
+      return null;
+    }
+
+    return encodePcmToWav(merged, sampleRate);
+  }
+}
+
 export class SpeechService {
   private synthesis: SpeechSynthesis;
   private currentRecognition: any = null;
@@ -121,26 +242,11 @@ export class SpeechService {
     });
   }
 
-  /**
-   * Prompts the browser for mic permission if not yet granted
-   */
-  async ensureMicPermission(): Promise<boolean> {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return true; // Older browser, proceed to SpeechRecognition directly
-      }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-      return true;
-    } catch (err) {
-      console.warn("Microphone permission check failed:", err);
-      return false;
-    }
-  }
+
 
   /**
    * High-reliability speech recognition with live interim streaming,
-   * natural 1.8s silence window, and instant finishListening capability
+   * natural silence window, and Sarvam AI Saaras STT fallback
    */
   async listen(
     onInterim?: (text: string) => void,
@@ -150,14 +256,9 @@ export class SpeechService {
     this.stopListening();
 
     const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognitionClass) {
-      throw new Error('STT is not supported in this browser. Please use Chrome, Edge, or Safari.');
-    }
 
-    const hasPermission = await this.ensureMicPermission();
-    if (!hasPermission) {
-      throw new Error('Microphone permission was denied. Please allow microphone in your browser address bar.');
-    }
+    const audioRecorder = new AudioRecorder();
+    await audioRecorder.start();
 
     return new Promise((resolve) => {
       let finalTranscript = '';
@@ -165,21 +266,13 @@ export class SpeechService {
       let hasFinished = false;
       let silenceTimer: any = null;
       let safetyTimeout: any = null;
+      const startTime = Date.now();
 
       this.currentTranscript = '';
 
-      const recognition = new SpeechRecognitionClass();
-      this.currentRecognition = recognition;
-      this.isListening = true;
-
-      // Use specified STT language or default Indian English
       const targetLang = overrideInputLang || this.speechInputLanguage || 'en-IN';
-      recognition.lang = targetLang;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
 
-      const finish = (resultText: string) => {
+      const finish = async (resultText: string) => {
         if (hasFinished) return;
         hasFinished = true;
         this.isListening = false;
@@ -188,16 +281,38 @@ export class SpeechService {
         if (silenceTimer) clearTimeout(silenceTimer);
         if (safetyTimeout) clearTimeout(safetyTimeout);
 
-        if (this.currentRecognition === recognition) {
+        if (this.currentRecognition) {
+          try {
+            this.currentRecognition.abort();
+          } catch {}
           this.currentRecognition = null;
         }
-        try {
-          recognition.abort();
-        } catch {}
+
+        const wavBlob = audioRecorder.stop();
+
+        // 1. If Web Speech API captured text, use it immediately
+        if (resultText && resultText.trim().length > 0) {
+          resolve(resultText.trim());
+          return;
+        }
+
+        // 2. If Web Speech returned empty but audio was captured, transcribe with Sarvam AI Saaras
+        if (wavBlob && sarvamService.isConfigured()) {
+          try {
+            if (onInterim) onInterim("Processing your voice with Sarvam AI...");
+            const sarvamText = await sarvamService.transcribeAudio(wavBlob, targetLang);
+            if (sarvamText && sarvamText.trim().length > 0) {
+              resolve(sarvamText.trim());
+              return;
+            }
+          } catch (err) {
+            console.warn("Sarvam AI STT notice:", err);
+          }
+        }
+
         resolve(resultText.trim());
       };
 
-      // Expose finish hook so the UI mic button can immediately finalize and submit
       this.finishCurrentListen = (overrideText?: string) => {
         const text = overrideText !== undefined ? overrideText : (finalTranscript + ' ' + latestInterim).trim();
         finish(text);
@@ -205,7 +320,6 @@ export class SpeechService {
 
       const resetSilenceTimer = () => {
         if (silenceTimer) clearTimeout(silenceTimer);
-        // Once the user has spoken, wait 1.8s of silence to finalize
         silenceTimer = setTimeout(() => {
           const currentText = (finalTranscript + ' ' + latestInterim).trim();
           if (currentText.length > 0) {
@@ -214,59 +328,83 @@ export class SpeechService {
         }, 1800);
       };
 
-      // Safety timeout after 30 seconds
+      // Safety timeout after 25 seconds
       safetyTimeout = setTimeout(() => {
         const text = (finalTranscript + ' ' + latestInterim).trim();
         finish(text);
-      }, 30000);
+      }, 25000);
 
-      recognition.onresult = (event: any) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const res = event.results[i];
-          const text = res[0].transcript;
-          if (res.isFinal) {
-            finalTranscript += (finalTranscript ? ' ' : '') + text;
-          } else {
-            interim += text;
-          }
-        }
-
-        latestInterim = interim;
-        const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
-        this.currentTranscript = currentCombined;
-
-        if (onInterim && currentCombined) {
-          onInterim(currentCombined);
-        }
-
-        if (currentCombined.length > 0) {
-          resetSilenceTimer();
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        console.warn("Speech recognition notice:", event.error);
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          finish('');
-        } else {
-          // If no-speech or aborted, resolve whatever words we captured
-          const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
-          finish(currentCombined);
-        }
-      };
-
-      recognition.onend = () => {
-        const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
-        finish(currentCombined);
-      };
+      if (!SpeechRecognitionClass) {
+        // Browser without Web Speech API (e.g. Firefox) -> Sarvam MediaRecorder fallback
+        return;
+      }
 
       try {
+        const recognition = new SpeechRecognitionClass();
+        this.currentRecognition = recognition;
+        this.isListening = true;
+
+        recognition.lang = targetLang;
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const res = event.results[i];
+            const text = res[0].transcript;
+            if (res.isFinal) {
+              finalTranscript += (finalTranscript ? ' ' : '') + text;
+            } else {
+              interim += text;
+            }
+          }
+
+          latestInterim = interim;
+          const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
+          this.currentTranscript = currentCombined;
+
+          if (onInterim && currentCombined) {
+            onInterim(currentCombined);
+          }
+
+          if (currentCombined.length > 0) {
+            resetSilenceTimer();
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.warn("Speech recognition event:", event.error);
+          if (event.error === 'no-speech' && this.isListening && !hasFinished) {
+            // If user hasn't spoken yet and under 8 seconds, keep waiting instead of aborting
+            if (Date.now() - startTime < 8000) {
+              try {
+                recognition.start();
+                return;
+              } catch {}
+            }
+          }
+          const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
+          finish(currentCombined);
+        };
+
+        recognition.onend = () => {
+          if (this.isListening && !hasFinished) {
+            const currentCombined = (finalTranscript + ' ' + latestInterim).trim();
+            if (!currentCombined && Date.now() - startTime < 8000) {
+              try {
+                recognition.start();
+                return;
+              } catch {}
+            }
+            finish(currentCombined);
+          }
+        };
+
         recognition.start();
       } catch (err: unknown) {
-        this.isListening = false;
-        console.error("SpeechRecognition start error:", err);
-        finish('');
+        console.warn("SpeechRecognition start notice:", err);
       }
     });
   }
@@ -312,7 +450,10 @@ export class SpeechService {
   getCurrentLanguage(): string { return this.currentLanguage; }
   static getSupportedLanguages(): SupportedLanguage[] { return SUPPORTED_LANGUAGES; }
   static isSupported(): boolean {
-    return !!(window.speechSynthesis && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
+    return !!(
+      (window.speechSynthesis && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) ||
+      (typeof navigator !== 'undefined' && navigator.mediaDevices && sarvamService.isConfigured())
+    );
   }
 }
 
