@@ -106,9 +106,9 @@ export function PastSessionsList({ onStartVoiceSession }: PastSessionsListProps)
           </div>
           <div className="space-y-1 max-w-md mx-auto">
             <h4 className="font-bold text-base text-deep-brown font-display">
-              No practice logs yet
+              Your conversation history will appear here.
             </h4>
-            <p className="text-xs text-deep-brown/65 leading-relaxed">
+            <p className="text-xs text-deep-brown/75 leading-relaxed">
               Complete your first English speaking call or practice signs in the SignBridge Studio. Your conversations and coaching tips will automatically be archived here.
             </p>
           </div>

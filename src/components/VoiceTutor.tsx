@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Zap, X } from 'lucide-react';
+
 import confetti from 'canvas-confetti';
 import { speechService, SpeechService } from '../lib/speech';
 import { sarvamService } from '../lib/sarvam';
@@ -12,6 +12,7 @@ import {
   type OutputMode,
 } from '../lib/multimodal';
 import { MicDiagnosticModal } from './MicDiagnosticModal';
+import { toast } from './ui/toast';
 
 // Modular Subcomponents
 import { TutorHeader } from './tutor/TutorHeader';
@@ -173,7 +174,9 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
           setStatus('idle');
         }
       } catch {
-        setError('Could not connect to voice service. Tap the orb to try again!');
+        const errText = 'Could not connect to voice service. Tap the orb to try again!';
+        setError(errText);
+        toast.error(errText);
         setStatus('idle');
       }
     },
@@ -216,7 +219,9 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         setStatus('idle');
       }
     } catch {
-      setError('Could not process speech. Please speak again or type below!');
+      const errText = 'Could not process speech. Please speak again or type below!';
+      setError(errText);
+      toast.error(errText);
       setStatus('idle');
     }
   };
@@ -224,7 +229,9 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   // Microphone capture handler
   const handleVoiceInput = async () => {
     if (!isSpeechSupported) {
-      setError('Voice recognition is not supported in this browser. Please use Chrome, Edge, or type below!');
+      const errText = 'Voice recognition is not supported in this browser. Please use Chrome, Edge, or type below!';
+      setError(errText);
+      toast.error(errText);
       setStatus('idle');
       return;
     }
@@ -251,10 +258,14 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       console.warn('Speech recognition notice:', err);
       const msg = err instanceof Error ? err.message : '';
       if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('not-allowed')) {
-        setError('Microphone access is blocked. Click "Mic Check" above to allow access.');
+        const errText = 'Microphone access is blocked. Click "Mic Check" above to allow access.';
+        setError(errText);
+        toast.error(errText);
         setIsMicDiagOpen(true);
       } else {
-        setError('Could not hear clearly. Tap the microphone and speak your sentence.');
+        const errText = 'Could not hear clearly. Tap the microphone and speak your sentence.';
+        setError(errText);
+        toast.error(errText);
       }
       setVoiceError('Voice input was unclear. Try typing or using sign language 🤟');
       setStatus('idle');
@@ -340,25 +351,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         onFinishSession={handleFinishSession}
       />
 
-      {/* 2. Toast Error Notification (Soft Coral Accent) */}
-      {error && (
-        <div className="relative z-30 max-w-md mx-auto mt-3 px-4 animate-slide-up w-full">
-          <div className="bg-cream-white border-2 border-soft-coral/70 rounded-2xl p-3 text-center flex items-center justify-between text-xs text-deep-brown shadow-warm-md">
-            <span className="flex items-center gap-2 text-left font-medium">
-              <Zap className="h-4 w-4 text-soft-coral flex-shrink-0" />
-              <span>{error}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="text-deep-brown/60 hover:text-soft-coral ml-2 p-1 transition-colors"
-              aria-label="Dismiss error notification"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Skip to Content */}
       <a href="#main-content" className="skip-to-content">

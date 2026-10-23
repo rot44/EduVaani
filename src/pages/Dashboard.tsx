@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { AppShell } from '../components/layout/AppShell';
+import { Button } from '../components/ui/button';
 import VoiceTutor from '../components/VoiceTutor';
 import { MicDiagnosticModal } from '../components/MicDiagnosticModal';
 import { useUser } from '../contexts/UserContext';
@@ -207,6 +208,35 @@ export default function Dashboard() {
           onMicCheck={() => setIsMicDiagOpen(true)}
           onOpenTour={() => setIsTourOpen(true)}
         />
+
+        {/* Zero-Session Friendly Onboarding Illustration Card */}
+        {(user.sessionsCompleted || 0) === 0 && (
+          <div className="rounded-3xl border border-warm-sand bg-gradient-to-r from-warm-ivory via-cream-white to-warm-ivory p-6 sm:p-8 shadow-warm-sm flex flex-col sm:flex-row items-center justify-between gap-6 card-hover">
+            <div className="flex items-center gap-5 text-center sm:text-left flex-col sm:flex-row">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-terracotta to-turmeric flex items-center justify-center text-3xl shadow-warm-sm flex-shrink-0 animate-breathe">
+                👋
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-black text-deep-brown font-display tracking-tight">
+                  Welcome to EduVaani, {user.name.split(' ')[0]}! 🌟
+                </h3>
+                <p className="text-xs sm:text-sm text-deep-brown/75 max-w-lg leading-relaxed">
+                  Start your very first conversational English practice session in a safe, judgment-free space with gentle grammar guidance in your mother tongue.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => startSession('free')}
+              variant="primary"
+              size="lg"
+              className="min-h-[48px] px-6 text-sm font-bold shadow-warm-md flex-shrink-0"
+              aria-label="Start your first conversation with Vaani"
+            >
+              🎙️ Start your first conversation
+            </Button>
+          </div>
+        )}
 
         {/* 2. Interactive Action Cards: Free-Flow Chat + Indian Sign Language Tutor */}
         <div className="grid lg:grid-cols-2 gap-6">

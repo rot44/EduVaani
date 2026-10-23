@@ -14,6 +14,7 @@ import {
 import { AppShell } from '../components/layout/AppShell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { AnimatedCounter } from '../components/ui/AnimatedCounter';
 import { useUser } from '../contexts/UserContext';
 
 // Modular Analytics Components
@@ -152,7 +153,7 @@ export default function Analytics() {
         {/* Top 4 Key Metric Metric Highlight Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Card 1: Total Speaking Time */}
-          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between">
+          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between card-hover">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider font-display">
                 Total Spoken Time
@@ -163,7 +164,7 @@ export default function Analytics() {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-deep-brown font-display">
-                {totalMinutes} <span className="text-base font-semibold text-deep-brown/70">mins</span>
+                <AnimatedCounter value={totalMinutes} /> <span className="text-base font-semibold text-deep-brown/70">mins</span>
               </div>
               <p className="text-[11px] text-peacock-teal font-medium mt-1">
                 Avg 15.2 mins per practice session
@@ -172,7 +173,7 @@ export default function Analytics() {
           </div>
 
           {/* Card 2: Current Streak */}
-          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between">
+          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between card-hover">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider font-display">
                 Active Streak
@@ -183,7 +184,7 @@ export default function Analytics() {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-deep-brown font-display">
-                {currentStreak} <span className="text-base font-semibold text-deep-brown/70">Days</span>
+                <AnimatedCounter value={currentStreak} /> <span className="text-base font-semibold text-deep-brown/70">Days</span>
               </div>
               <p className="text-[11px] text-terracotta font-semibold mt-1">
                 🔥 Personal best: {analytics.longestStreak} days
@@ -192,7 +193,7 @@ export default function Analytics() {
           </div>
 
           {/* Card 3: Overall Fluency Score */}
-          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between">
+          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between card-hover">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider font-display">
                 AI Fluency Index
@@ -203,7 +204,7 @@ export default function Analytics() {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-deep-brown font-display">
-                {analytics.averageFluency} <span className="text-base font-semibold text-deep-brown/70">/ 10</span>
+                <AnimatedCounter value={analytics.averageFluency} decimals={1} /> <span className="text-base font-semibold text-deep-brown/70">/ 10</span>
               </div>
               <p className="text-[11px] text-emerald-700 font-medium mt-1">
                 +24% growth across 6 sessions
@@ -212,7 +213,7 @@ export default function Analytics() {
           </div>
 
           {/* Card 4: Sessions Conquered */}
-          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between">
+          <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm-sm flex flex-col justify-between card-hover">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-deep-brown/75 uppercase tracking-wider font-display">
                 Scenarios Conquered
@@ -223,7 +224,7 @@ export default function Analytics() {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-deep-brown font-display">
-                {sessionsCount} <span className="text-base font-semibold text-deep-brown/70">Completed</span>
+                <AnimatedCounter value={sessionsCount} /> <span className="text-base font-semibold text-deep-brown/70">Completed</span>
               </div>
               <p className="text-[11px] text-turmeric-dark font-medium mt-1">
                 5 distinct Indian cultural situations
@@ -231,6 +232,29 @@ export default function Analytics() {
             </div>
           </div>
         </div>
+
+        {/* Empty State Banner if no sessions yet */}
+        {(user?.sessionsCompleted || 0) === 0 && (
+          <div className="p-6 sm:p-8 rounded-3xl border-2 border-dashed border-warm-sand bg-warm-ivory text-center space-y-3 card-hover animate-slide-up">
+            <div className="w-12 h-12 rounded-2xl bg-turmeric/20 text-turmeric-dark mx-auto flex items-center justify-center text-2xl shadow-xs">
+              📊
+            </div>
+            <h3 className="text-xl font-bold font-display text-deep-brown">
+              Practice for a few days to see your progress here
+            </h3>
+            <p className="text-xs sm:text-sm text-deep-brown/75 max-w-md mx-auto leading-relaxed">
+              As you practice conversations with Vaani, your spoken minutes, AI-scored fluency curve, and vocabulary retention will automatically appear here.
+            </p>
+            <div className="pt-2">
+              <Button asChild variant="primary" className="min-h-[44px] px-6">
+                <Link to="/dashboard">
+                  <Mic className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Start First Conversation
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Section 1: Weekly Practice Bar Chart & Fluency Trend Line */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">

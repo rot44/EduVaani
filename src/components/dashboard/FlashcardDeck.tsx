@@ -72,96 +72,103 @@ export function FlashcardDeck({
       </div>
 
       {/* Main Flip Card Container */}
-      <div
-        onClick={onFlip}
-        role="button"
-        tabIndex={0}
-        aria-label={`Flashcard: ${card.word}. ${isFlipped ? `Meaning: ${card.meaningHindi}. Example: ${card.example}` : 'Tap or press Enter to flip card.'}`}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onFlip();
-          }
-        }}
-        className="w-full min-h-[300px] rounded-3xl border-2 border-warm-sand bg-warm-ivory hover:border-terracotta/40 p-8 sm:p-10 cursor-pointer transition-all duration-300 shadow-warm-md hover:shadow-warm-lg relative flex flex-col justify-between select-none focus-visible:ring-2 focus-visible:ring-terracotta"
-      >
-        {!isFlipped ? (
-          /* Front Side */
-          <div className="text-center my-auto space-y-4">
-            <div className="flex justify-center">
-              <Badge variant="primary" className="text-xs">
-                {card.category}
-              </Badge>
-            </div>
+      {/* 3D Perspective Flip Card Container */}
+      <div className="perspective-1000 w-full min-h-[340px]">
+        <div
+          onClick={onFlip}
+          role="button"
+          tabIndex={0}
+          aria-label={`Flashcard: ${card.word}. ${isFlipped ? `Meaning: ${card.meaningHindi}. Example: ${card.example}` : 'Tap or press Enter to flip card.'}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onFlip();
+            }
+          }}
+          className={`relative w-full min-h-[340px] transform-style-3d transition-transform duration-500 cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-terracotta rounded-3xl ${
+            isFlipped ? 'rotate-y-180' : ''
+          }`}
+        >
+          {/* Front Face */}
+          <div className="absolute inset-0 backface-hidden w-full h-full rounded-3xl border-2 border-warm-sand bg-warm-ivory hover:border-terracotta/40 p-8 sm:p-10 shadow-warm-md hover:shadow-warm-lg flex flex-col justify-between">
+            <div className="text-center my-auto space-y-4">
+              <div className="flex justify-center">
+                <Badge variant="primary" className="text-xs">
+                  {card.category}
+                </Badge>
+              </div>
 
-            <h3 className="text-4xl font-extrabold text-deep-brown tracking-wide font-display">
-              {card.word}
-            </h3>
+              <h3 className="text-4xl font-extrabold text-deep-brown tracking-wide font-display">
+                {card.word}
+              </h3>
 
-            <p className="text-base text-peacock-teal font-mono">
-              {card.pronunciation}
-            </p>
-
-            <div className="pt-2 flex justify-center">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSpeak(card.word);
-                }}
-                className="w-12 h-12 rounded-full bg-peacock-teal/15 border border-peacock-teal/30 text-peacock-teal hover:bg-peacock-teal/25 flex items-center justify-center transition-all cursor-pointer shadow-warm-sm min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-peacock-teal"
-                title="Listen to pronunciation"
-                aria-label={`Listen to pronunciation of ${card.word}`}
-              >
-                <Volume2
-                  className={`h-5 w-5 ${
-                    speakingWord === card.word ? 'animate-bounce text-turmeric-dark' : ''
-                  }`}
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-
-            <p className="text-xs text-deep-brown/75 pt-2 font-sans font-medium">
-              👆 Tap card or press Space/Enter to flip
-            </p>
-          </div>
-        ) : (
-          /* Back Side */
-          <div className="text-center my-auto space-y-4 animate-slide-up">
-            <div className="text-2xl sm:text-3xl font-bold text-terracotta font-display">
-              {card.meaningHindi}
-            </div>
-
-            <div className="bg-cream-white/95 p-4 rounded-2xl border border-warm-sand text-left shadow-warm-sm">
-              <p className="text-xs text-deep-brown/75 mb-1 font-semibold uppercase tracking-wider">
-                Example in Context
+              <p className="text-base text-peacock-teal font-mono">
+                {card.pronunciation}
               </p>
-              <p className="text-sm text-deep-brown font-serif italic leading-relaxed">
-                &quot;{card.example}&quot;
+
+              <div className="pt-2 flex justify-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSpeak(card.word);
+                  }}
+                  className="w-12 h-12 rounded-full bg-peacock-teal/15 border border-peacock-teal/30 text-peacock-teal hover:bg-peacock-teal/25 flex items-center justify-center transition-all cursor-pointer shadow-warm-sm min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-peacock-teal"
+                  title="Listen to pronunciation"
+                  aria-label={`Listen to pronunciation of ${card.word}`}
+                >
+                  <Volume2
+                    className={`h-5 w-5 ${
+                      speakingWord === card.word ? 'animate-bounce text-turmeric-dark' : ''
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+
+              <p className="text-xs text-deep-brown/75 pt-2 font-sans font-medium">
+                👆 Tap card or press Space/Enter to flip
               </p>
             </div>
-
-            <div className="pt-1 flex justify-center">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSpeak(card.example);
-                }}
-                className="border border-peacock-teal/30 bg-peacock-teal/10 hover:bg-peacock-teal/20 text-peacock-teal px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer transition-colors font-semibold shadow-warm-sm min-h-[44px] focus-visible:ring-2 focus-visible:ring-peacock-teal"
-                aria-label={`Hear example sentence spoken: ${card.example}`}
-              >
-                <Volume2 className="h-4 w-4" aria-hidden="true" />
-                <span>Hear Full Sentence</span>
-              </button>
-            </div>
-
-            <p className="text-xs text-deep-brown/75 pt-1 font-sans font-medium">
-              👆 Tap card or press Space/Enter to flip back
-            </p>
           </div>
-        )}
+
+          {/* Back Face */}
+          <div className="absolute inset-0 backface-hidden rotate-y-180 w-full h-full rounded-3xl border-2 border-warm-sand bg-warm-ivory hover:border-terracotta/40 p-8 sm:p-10 shadow-warm-md hover:shadow-warm-lg flex flex-col justify-between">
+            <div className="text-center my-auto space-y-4">
+              <div className="text-2xl sm:text-3xl font-bold text-terracotta font-display">
+                {card.meaningHindi}
+              </div>
+
+              <div className="bg-cream-white/95 p-4 rounded-2xl border border-warm-sand text-left shadow-warm-sm">
+                <p className="text-xs text-deep-brown/75 mb-1 font-semibold uppercase tracking-wider">
+                  Example in Context
+                </p>
+                <p className="text-sm text-deep-brown font-serif italic leading-relaxed">
+                  &quot;{card.example}&quot;
+                </p>
+              </div>
+
+              <div className="pt-1 flex justify-center">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSpeak(card.example);
+                  }}
+                  className="border border-peacock-teal/30 bg-peacock-teal/10 hover:bg-peacock-teal/20 text-peacock-teal px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer transition-colors font-semibold shadow-warm-sm min-h-[44px] focus-visible:ring-2 focus-visible:ring-peacock-teal"
+                  aria-label={`Hear example sentence spoken: ${card.example}`}
+                >
+                  <Volume2 className="h-4 w-4" aria-hidden="true" />
+                  <span>Hear Full Sentence</span>
+                </button>
+              </div>
+
+              <p className="text-xs text-deep-brown/75 pt-1 font-sans font-medium">
+                👆 Tap card or press Space/Enter to flip back
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Navigation & Mastery Controls */}
