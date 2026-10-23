@@ -67,6 +67,8 @@ export function ControlDock({
         {showInputDrawer && (
           <form onSubmit={onTextSubmit} className="flex items-center gap-2 animate-slide-up">
             <input
+              id="chat-text-input"
+              aria-label="Type your message in English"
               type="text"
               value={textInput}
               onChange={(e) => onTextInputChange(e.target.value)}

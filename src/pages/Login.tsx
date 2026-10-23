@@ -205,12 +205,13 @@ export default function Login() {
 
                 <form onSubmit={handleStep1Submit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-deep-brown/80 mb-1.5 font-display">
+                    <label htmlFor="login-name" className="block text-xs font-bold text-deep-brown/80 mb-1.5 font-display">
                       Your Full Name
                     </label>
                     <div className="relative">
                       <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-deep-brown/45" />
                       <input
+                        id="login-name"
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -222,12 +223,13 @@ export default function Login() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-deep-brown/80 mb-1.5 font-display">
+                    <label htmlFor="login-email" className="block text-xs font-bold text-deep-brown/80 mb-1.5 font-display">
                       Email Address
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-deep-brown/45" />
                       <input
+                        id="login-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}

@@ -33,7 +33,7 @@ export default function Analytics() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Load consolidated analytics data
-  const analytics = useMemo(() => getAnalyticsData(), [user]);
+  const analytics = useMemo(() => getAnalyticsData(user), [user]);
 
   const handleShare = async () => {
     try {

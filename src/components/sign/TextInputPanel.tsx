@@ -65,6 +65,8 @@ export function TextInputPanel({
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="relative">
           <textarea
+            id="isl-text-input"
+            aria-label="Text to convert into Indian Sign Language"
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
             placeholder="Type a word or sentence in English (e.g. 'Namaste, thank you friend')..."

@@ -23,6 +23,8 @@ function TwitterXIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export function Footer() {
   return (
     <footer className="border-t border-warm-sand bg-warm-sand/35 text-deep-brown mt-auto pt-16 pb-12">
@@ -156,7 +158,7 @@ export function Footer() {
             <span>•</span>
             <span>Powered by Gemini & Sarvam AI</span>
             <span>•</span>
-            <span>© {new Date().getFullYear()} EduVaani</span>
+            <span>© {CURRENT_YEAR} EduVaani</span>
           </div>
         </div>
 

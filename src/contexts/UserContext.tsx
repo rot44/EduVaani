@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import {
   getUser,
   login as authLogin,
@@ -22,19 +22,15 @@ export interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
+  const [user, setUser] = useState<User | null>(() => {
     try {
-      const existing = getUser();
-      setUser(existing);
+      return getUser();
     } catch (err) {
       console.warn('Failed to load user session:', err);
-    } finally {
-      setIsLoading(false);
+      return null;
     }
-  }, []);
+  });
+  const [isLoading] = useState(false);
 
   const login = useCallback((name: string, email: string, preferences?: UserPreferences): User => {
     const loggedInUser = authLogin(name, email, preferences);

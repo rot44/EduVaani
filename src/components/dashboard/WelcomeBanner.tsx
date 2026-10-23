@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Compass, Sparkles } from 'lucide-react';
 import type { User } from '../../lib/auth';
 import { Badge } from '../ui/badge';
@@ -12,7 +13,7 @@ export interface WelcomeBannerProps {
 
 export function WelcomeBanner({ user, onMicCheck, onOpenTour }: WelcomeBannerProps) {
   // Time-of-day aware greeting (morning / afternoon / evening based on local hour)
-  const currentHour = new Date().getHours();
+  const [currentHour] = useState(() => new Date().getHours());
   let timeGreeting = 'Good morning';
   if (currentHour >= 12 && currentHour < 17) {
     timeGreeting = 'Good afternoon';

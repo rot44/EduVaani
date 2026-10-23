@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, ArrowLeft, X, Check, Compass } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -55,6 +55,13 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
 
   const currentStep = TOUR_STEPS[currentStepIndex];
 
+  const handleDismiss = useCallback(() => {
+    onDismiss();
+    setTimeout(() => {
+      triggerElementRef.current?.focus();
+    }, 50);
+  }, [onDismiss]);
+
   // Store trigger element and handle Escape & focus restoration
   useEffect(() => {
     if (isOpen) {
@@ -94,14 +101,7 @@ export function OnboardingTourModal({ isOpen, onDismiss }: OnboardingTourModalPr
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen]);
-
-  const handleDismiss = () => {
-    onDismiss();
-    setTimeout(() => {
-      triggerElementRef.current?.focus();
-    }, 50);
-  };
+  }, [isOpen, handleDismiss]);
 
   // Scroll target element into view whenever current step changes
   useEffect(() => {

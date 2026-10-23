@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { X, Calendar, Clock, MessageSquare, Lightbulb, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -20,12 +20,12 @@ export function SessionTranscriptModal({
   const triggerElementRef = useRef<HTMLElement | null>(null);
   const modalRef = useRef<HTMLDivElement | null>(null);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
     setTimeout(() => {
       triggerElementRef.current?.focus();
     }, 50);
-  };
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,7 +63,7 @@ export function SessionTranscriptModal({
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen || !session) return null;
 

@@ -17,17 +17,25 @@ export function AnimatedCounter({
   suffix = '',
   className = '',
 }: AnimatedCounterProps) {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return value;
+    }
+    return 0;
+  });
 
   useEffect(() => {
-    // If user prefers reduced motion, jump straight to the value
+    // If user prefers reduced motion, update via animation frame to prevent synchronous setState
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setDisplayValue(value);
-      return;
+      const rafId = requestAnimationFrame(() => {
+        setDisplayValue(value);
+      });
+      return () => cancelAnimationFrame(rafId);
     }
 
     let startTimestamp: number | null = null;
     const startValue = 0;
+    let animId: number;
 
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
@@ -41,13 +49,14 @@ export function AnimatedCounter({
       setDisplayValue(current);
 
       if (progress < 1) {
-        requestAnimationFrame(step);
+        animId = requestAnimationFrame(step);
       } else {
         setDisplayValue(value);
       }
     };
 
-    requestAnimationFrame(step);
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
   }, [value, duration]);
 
   const formatted =

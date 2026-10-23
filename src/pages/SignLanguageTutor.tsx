@@ -97,14 +97,11 @@ export default function SignLanguageTutor() {
   useEffect(() => {
     if (!isPlaying) return;
     const sequence = signResult.sequence;
-    if (!sequence || sequence.length === 0) {
-      setIsPlaying(false);
-      return;
-    }
-
-    if (currentStepIndex >= sequence.length - 1) {
-      setIsPlaying(false);
-      return;
+    if (!sequence || sequence.length === 0 || currentStepIndex >= sequence.length - 1) {
+      const timer = window.setTimeout(() => {
+        setIsPlaying(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     const currentItem = sequence[currentStepIndex];

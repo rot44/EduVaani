@@ -95,8 +95,8 @@ export function getMasteredWords(): string[] {
 /**
  * Loads and combines real user stats & multimodal sessions with realistic baseline history
  */
-export function getAnalyticsData(): AnalyticsSummary {
-  const user = getUser();
+export function getAnalyticsData(customUser?: User | null): AnalyticsSummary {
+  const user = customUser !== undefined ? customUser : getUser();
   const savedSessions: SavedSession[] = multimodalManager.getSavedSessions();
   const masteredWords = getMasteredWords();
 

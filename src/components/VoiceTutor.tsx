@@ -60,10 +60,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
 
   const chatRef = useRef<HTMLDivElement>(null);
   const hasAutoStartedRef = useRef(false);
-  const sessionStartTimeRef = useRef<number>(Date.now());
+  const sessionStartTimeRef = useRef<number>(0);
 
   // Subscribe to Multimodal Manager state changes
   useEffect(() => {
+    sessionStartTimeRef.current = Date.now();
     return multimodalManager.subscribe(() => {
       setUnifiedHistory(multimodalManager.getConversationHistory());
       setInputMode(multimodalManager.getInputMode());

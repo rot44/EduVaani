@@ -19,7 +19,14 @@ export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Close mobile drawer when pathname changes
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
+    setMobileMenuOpen(false);
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,11 +35,6 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Close mobile drawer on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
 
   // Close mobile drawer on Escape key
   useEffect(() => {
@@ -164,8 +166,7 @@ export function Navbar() {
                     {/* Center Avatar Image */}
                     <img
                       src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`}
-                      alt=""
-                      aria-hidden="true"
+                      alt={`${user.name}'s avatar`}
                       className="absolute w-8 h-8 rounded-full object-cover"
                     />
                   </div>
@@ -254,8 +255,7 @@ export function Navbar() {
                     <div className="flex items-center gap-3">
                       <img
                         src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`}
-                        alt=""
-                        aria-hidden="true"
+                        alt={`${user.name}'s avatar`}
                         className="w-10 h-10 rounded-full"
                       />
                       <div>

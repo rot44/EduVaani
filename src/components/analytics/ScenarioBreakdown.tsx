@@ -18,18 +18,28 @@ export function ScenarioBreakdown({ data }: ScenarioBreakdownProps) {
   const radius = (size - strokeWidth) / 2; // radius ~ 78
   const circumference = 2 * Math.PI * radius;
 
-  // Calculate segment offsets
-  let accumulatedPercent = 0;
-  const segments = data.map((item) => {
-    const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
-    const strokeDashoffset = -((accumulatedPercent / 100) * circumference);
-    accumulatedPercent += item.percentage;
-    return {
-      ...item,
-      strokeDasharray,
-      strokeDashoffset,
-    };
-  });
+  // Calculate segment offsets purely
+  const segments = data.reduce<{
+    accumulated: number;
+    items: Array<ScenarioStat & { strokeDasharray: string; strokeDashoffset: number }>;
+  }>(
+    (acc, item) => {
+      const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
+      const strokeDashoffset = -((acc.accumulated / 100) * circumference);
+      return {
+        accumulated: acc.accumulated + item.percentage,
+        items: [
+          ...acc.items,
+          {
+            ...item,
+            strokeDasharray,
+            strokeDashoffset,
+          },
+        ],
+      };
+    },
+    { accumulated: 0, items: [] }
+  ).items;
 
   const activeScenario = hoveredId ? data.find((d) => d.id === hoveredId) : null;
 
