@@ -290,6 +290,11 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
     const msg = textInput;
     setTextInput('');
     processUserMessage(msg, 'text');
+    setTimeout(() => {
+      if (chatRef.current) {
+        chatRef.current.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const replayMessage = async (text: string, index: number) => {
@@ -323,7 +328,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
   const lastUserMsg = [...unifiedHistory].reverse().find((m) => m.role === 'user');
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col bg-gradient-to-b from-cream-white via-warm-ivory to-warm-sand/35 text-deep-brown selection:bg-terracotta selection:text-cream-white overflow-hidden font-sans">
+    <div className="relative w-full h-screen h-[100dvh] max-h-screen flex flex-col bg-gradient-to-b from-cream-white via-warm-ivory to-warm-sand/35 text-deep-brown selection:bg-terracotta selection:text-cream-white overflow-hidden font-sans">
       
       {/* Background ambient lighting accents */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -370,7 +375,7 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
       </div>
 
       {/* 3. Main Stage: Voice Call (with inline Camera in Sign mode) or Transcript View */}
-      <main id="main-content" tabIndex={-1} className="flex-grow flex flex-col relative z-10 max-w-4xl mx-auto w-full px-4 py-4 overflow-hidden focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="flex-1 min-h-0 flex flex-col relative z-10 max-w-4xl mx-auto w-full px-2 sm:px-4 py-2 overflow-hidden focus:outline-none">
         {viewMode === 'call' ? (
           <CallView
             status={status}
@@ -404,6 +409,8 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
               setShowInputDrawer(true);
             }}
             onStartSpeaking={handleMicButtonClick}
+            status={status}
+            interimSpeech={interimSpeech}
           />
         )}
       </main>

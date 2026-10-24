@@ -87,7 +87,7 @@ export function CallView({
     Boolean(assistantSignResult && assistantSignResult.sequence.length > 0);
 
   return (
-    <div className="flex-grow flex flex-col justify-between items-center py-2 sm:py-4 space-y-4 w-full">
+    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin flex flex-col justify-between items-center py-2 sm:py-4 space-y-4 w-full">
       
       {/* Student's latest speech prompt bubble / Live Interim Speech / Input Fallback */}
       <div className="w-full max-w-lg min-h-[46px] flex flex-col items-center justify-center text-center px-2">

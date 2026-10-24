@@ -35,7 +35,7 @@ export function TutorHeader({
   onFinishSession,
 }: TutorHeaderProps) {
   return (
-    <header className="relative z-20 bg-warm-ivory/95 border-b border-warm-sand px-4 sm:px-6 py-3 backdrop-blur-xl shadow-warm-sm">
+    <header className="relative z-20 bg-warm-ivory/95 border-b border-warm-sand px-4 sm:px-6 py-3 backdrop-blur-xl shadow-warm-sm flex-shrink-0">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 flex-wrap">
         
         {/* Title, Message Count & Status */}

@@ -40,7 +40,7 @@ export function ControlDock({
   onSelectSuggestedPhrase,
 }: ControlDockProps) {
   return (
-    <footer className="relative z-30 px-4 pb-4 pt-1">
+    <footer className="relative z-30 px-4 pb-4 pt-1 flex-shrink-0">
       <div className="max-w-xl mx-auto space-y-2.5">
         
         {/* Quick Suggested Scenarios Phrases */}
