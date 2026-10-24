@@ -331,23 +331,28 @@ export function CameraPanel({
 
         {/* Standby / Permission Prompt State */}
         {!isCameraActive && (
-          <div className="w-full h-full flex items-center justify-center p-4">
+          <div className="w-full h-full flex items-center justify-center">
             {permissionDenied || errorMessage ? (
-              <div className="text-center space-y-3 max-w-sm p-4 bg-cream-white/95 rounded-2xl border border-soft-coral/40 shadow-warm-sm">
-                <div className="w-12 h-12 rounded-2xl bg-soft-coral/15 text-soft-coral flex items-center justify-center mx-auto">
+              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#2D2327] via-[#221A1E] to-[#140E11] text-cream-white space-y-3 relative overflow-hidden">
+                <div className="w-12 h-12 rounded-2xl bg-soft-coral/20 text-soft-coral flex items-center justify-center mx-auto border border-soft-coral/30">
                   <AlertCircle className="h-6 w-6" />
                 </div>
-                <h4 className="font-bold text-sm text-deep-brown font-display">
+                <h4 className="font-bold text-sm sm:text-base text-cream-white font-display">
                   Camera Permission Required
                 </h4>
-                <p className="text-xs text-deep-brown/70 leading-relaxed font-sans">
+                <p className="text-xs text-cream-white/70 max-w-sm leading-relaxed font-sans">
                   {errorMessage}
                 </p>
-                <div className="pt-2 flex justify-center gap-2">
-                  <Button onClick={startCamera} variant="primary" size="sm" className="text-xs">
+                <div className="pt-1 flex items-center justify-center gap-3">
+                  <Button onClick={startCamera} variant="primary" size="sm" className="text-xs font-semibold">
                     Retry Permission
                   </Button>
-                  <Button onClick={onLearnWithoutCamera} variant="outline" size="sm" className="text-xs">
+                  <Button
+                    onClick={onLearnWithoutCamera}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs bg-cream-white/10 text-cream-white border-cream-white/20 hover:bg-cream-white/20"
+                  >
                     Continue Without
                   </Button>
                 </div>
