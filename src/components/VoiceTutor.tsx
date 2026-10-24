@@ -133,26 +133,33 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
         setStatus('processing');
         let welcome: string;
 
-        if (mode === 'free-flow') {
+        if (mode === 'free-flow' || mode === 'free') {
           welcome = await aiService.startFreeFlowChat();
           setSessionTitle('Free Conversation 💬');
           setActiveScenario(null);
         } else {
-          welcome = await aiService.startRoleplay(mode);
           const scenario = ROLEPLAY_SCENARIOS.find((s) => s.id === mode);
           if (scenario) {
+            welcome = await aiService.startRoleplay(mode);
             setActiveScenario(scenario);
             setSessionTitle(`${scenario.emoji} ${scenario.title}`);
           } else {
-            setSessionTitle('Scenario Practice');
+            // Gracefully fallback to free-flow if scenario ID is unrecognized
+            welcome = await aiService.startFreeFlowChat();
+            setSessionTitle('Free Conversation 💬');
+            setActiveScenario(null);
           }
         }
 
         let messageToSpeak = welcome;
         let translated: string | undefined = undefined;
         if (selectedLanguage !== 'en') {
-          translated = await translationService.translateToLanguage(welcome, selectedLanguage);
-          messageToSpeak = translated;
+          try {
+            translated = await translationService.translateToLanguage(welcome, selectedLanguage);
+            messageToSpeak = translated;
+          } catch (tErr) {
+            console.warn('Welcome translation notice:', tErr);
+          }
         }
 
         // Initialize session in multimodal manager
@@ -169,12 +176,17 @@ export default function VoiceTutor({ autoStartMode, onEnd }: VoiceTutorProps) {
 
         if (outputMode === 'voice' || outputMode === 'all') {
           setStatus('speaking');
-          await speechService.speak(messageToSpeak, speechRate);
+          try {
+            await speechService.speak(messageToSpeak, speechRate);
+          } catch (speakErr) {
+            console.warn('Initial speech output notice:', speakErr);
+          }
           setStatus('idle');
         } else {
           setStatus('idle');
         }
-      } catch {
+      } catch (err) {
+        console.error('Voice tutor startSession error:', err);
         const errText = 'Could not connect to voice service. Tap the orb to try again!';
         setError(errText);
         toast.error(errText);

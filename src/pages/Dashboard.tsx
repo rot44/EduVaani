@@ -227,7 +227,7 @@ export default function Dashboard() {
             </div>
 
             <Button
-              onClick={() => startSession('free')}
+              onClick={() => startSession('free-flow')}
               variant="primary"
               size="lg"
               className="min-h-[48px] px-6 text-sm font-bold shadow-warm-md flex-shrink-0"
@@ -272,7 +272,7 @@ export default function Dashboard() {
         </div>
 
         {/* 4. Past Practice Sessions List & Transcripts */}
-        <PastSessionsList onStartVoiceSession={() => startSession('free')} />
+        <PastSessionsList onStartVoiceSession={() => startSession('free-flow')} />
 
         {/* 5. Daily Indian English Vocabulary Builder & 3D Flashcards */}
         <VocabularyBuilder

@@ -42,8 +42,10 @@ class SarvamService {
   }
 
   private getEndpoint(path: string): string {
-    // In Vite dev mode, use the proxy to prevent browser CORS issues
-    return `/api/sarvam${path}`;
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return `/api/sarvam${path}`;
+    }
+    return `https://api.sarvam.ai${path}`;
   }
 
   /**
@@ -117,7 +119,10 @@ class SarvamService {
         reject(new Error(`Audio playback error: ${e}`));
       };
 
-      audio.play().catch(reject);
+      audio.play().catch((err) => {
+        console.warn('Audio autoplay blocked by browser policy:', err);
+        resolve();
+      });
     });
   }
 
