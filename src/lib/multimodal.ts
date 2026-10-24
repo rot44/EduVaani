@@ -19,6 +19,7 @@ import { aiService, type CoachingTip, type RoleplayScenario } from './ai';
 import { speechService } from './speech';
 import { translationService } from './translation';
 import { textToSignSequence, type SignSequence } from './signGeneration';
+import signAnimationsData from '../data/isl-sign-animations.json';
 
 export type InputMode = 'voice' | 'text' | 'sign';
 export type OutputMode = 'voice' | 'text' | 'sign' | 'all';
@@ -143,7 +144,13 @@ class MultimodalCommunicationManager {
     this.history.push(userMsg);
     this.notifyListeners();
 
-    // 2. Query Gemini AI Tutor (preserving existing system prompts and fallbacks)
+    // 2. Query Gemini AI Tutor (adapting tutor mode for sign or scenario)
+    if (source === 'sign' || options?.scenario?.mode === 'isl') {
+      aiService.setTutorMode('isl');
+    } else if (source === 'voice') {
+      aiService.setTutorMode('spoken');
+    }
+
     const rawReply = await aiService.sendMessage(trimmed);
     const aiHistory = aiService.getChatHistory();
     const lastAiMsg = aiHistory[aiHistory.length - 1];
@@ -213,33 +220,21 @@ class MultimodalCommunicationManager {
    * Suggest nearest supported ISL signs when recognition confidence is low or uncertain
    */
   getSuggestedSigns(query?: string | null): string[] {
-    const popularSigns = [
-      'Namaste',
-      'Hello',
-      'Thank you',
-      'Good',
-      'Morning',
-      'Yes',
-      'No',
-      'Help',
-      'Please',
-      'English',
-      'Friend',
-      'Learn',
-    ];
+    const wordsDict = (signAnimationsData.words as unknown as Record<string, { label: string }>);
+    const allLabels = Object.values(wordsDict).map((w) => w.label);
 
     if (!query) {
-      return popularSigns.slice(0, 4);
+      return ['Namaste', 'Hello', 'Thank You', 'Water', 'Food', 'Learn', 'Family', 'Help'].slice(0, 4);
     }
 
     const clean = query.toLowerCase().trim();
-    const matches = popularSigns.filter((s) => s.toLowerCase().includes(clean) || clean.includes(s.toLowerCase()));
+    const matches = allLabels.filter((label) => label.toLowerCase().includes(clean) || clean.includes(label.toLowerCase()));
 
     if (matches.length > 0) {
-      return matches.slice(0, 4);
+      return Array.from(new Set(matches)).slice(0, 4);
     }
 
-    return popularSigns.slice(0, 4);
+    return ['Namaste', 'Hello', 'Thank You', 'Help'].slice(0, 4);
   }
 
   // --- Session Persistence (localStorage) ---

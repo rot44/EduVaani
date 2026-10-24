@@ -18,6 +18,8 @@ export interface RecognitionOutputProps {
   isCameraActive: boolean;
   onSendToConversation?: (text: string) => void;
   recentRecognitions?: RecognitionItem[];
+  targetSign?: string | null;
+  onSelectTargetSign?: (sign: string) => void;
 }
 
 export function RecognitionOutput({
@@ -28,8 +30,18 @@ export function RecognitionOutput({
   isCameraActive,
   onSendToConversation,
   recentRecognitions = [],
+  targetSign,
+  onSelectTargetSign,
 }: RecognitionOutputProps) {
   const confidencePercent = Math.min(100, Math.round(confidence * 100));
+
+  const isTargetMatch = Boolean(
+    targetSign &&
+    recognizedSign &&
+    (recognizedSign.trim().toLowerCase() === targetSign.trim().toLowerCase() ||
+     targetSign.trim().toLowerCase().includes(recognizedSign.trim().toLowerCase()) ||
+     recognizedSign.trim().toLowerCase().includes(targetSign.trim().toLowerCase()))
+  );
 
   return (
     <div className="rounded-3xl border border-warm-sand bg-warm-ivory p-5 sm:p-6 shadow-warm space-y-4">
@@ -49,20 +61,67 @@ export function RecognitionOutput({
           </div>
         </div>
 
-        {recognizedSign && (
-          <Badge variant="teal" className="text-xs">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Detected
-          </Badge>
-        )}
+        <div className="flex items-center gap-1.5">
+          {targetSign && (
+            <Badge variant="turmeric" className="text-xs font-bold">
+              Target: {targetSign}
+            </Badge>
+          )}
+          {recognizedSign && (
+            <Badge variant="teal" className="text-xs">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Detected
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {/* Target Match Celebration Banner */}
+      {isTargetMatch && (
+        <div className="p-3.5 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl flex items-center justify-between animate-slide-up">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500 text-cream-white flex items-center justify-center font-bold text-lg shadow-xs">
+              🎯
+            </div>
+            <div>
+              <p className="text-xs font-bold text-emerald-800 font-display">
+                Target Sign Matched: {targetSign}! 🎉
+              </p>
+              <p className="text-[11px] text-emerald-700 font-medium">
+                Excellent! Handshape and position identified correctly.
+              </p>
+            </div>
+          </div>
+          <Badge variant="teal" className="bg-emerald-600 text-cream-white text-[11px] font-bold">
+            100% Pass
+          </Badge>
+        </div>
+      )}
+
+      {/* Target Guidance Prompt (when target is set but not yet detected or different) */}
+      {targetSign && !isTargetMatch && isCameraActive && (
+        <div className="p-3 bg-warm-sand/40 border border-warm-sand rounded-2xl flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-terracotta font-bold text-base">🎯</span>
+            <div>
+              <span className="font-semibold text-deep-brown">Active Practice Target: </span>
+              <span className="font-bold text-terracotta font-display">{targetSign}</span>
+              <p className="text-[10px] text-deep-brown/65">
+                {recognizedSign
+                  ? `Detected "${recognizedSign}" — adjust handshape for "${targetSign}"`
+                  : `Show the "${targetSign}" sign in front of the camera`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Display Area (Live region for screen reader updates) */}
       <div
         aria-live="polite"
         aria-atomic="true"
         aria-label={recognizedSign ? `Recognized sign: ${recognizedSign}${hindiMeaning ? `, Hindi meaning: ${hindiMeaning}` : ''}. Confidence: ${confidencePercent}%` : 'Sign recognition standby'}
-        className="rounded-2xl border border-warm-sand bg-cream-white p-6 text-center space-y-3 min-h-[160px] flex flex-col justify-center shadow-inner"
+        className={`rounded-2xl border ${isTargetMatch ? 'border-emerald-400 bg-emerald-50/50' : 'border-warm-sand bg-cream-white'} p-6 text-center space-y-3 min-h-[160px] flex flex-col justify-center shadow-inner transition-colors`}
       >
         {isLoading ? (
           /* Warm sand skeleton shimmer when model is loading */
@@ -92,11 +151,13 @@ export function RecognitionOutput({
             <div className="text-3xl">🤟</div>
             <p className="text-sm font-semibold text-deep-brown/80 font-display">
               {isCameraActive
-                ? 'Show a supported sign to begin'
+                ? targetSign
+                  ? `Perform "${targetSign}" to practice`
+                  : 'Show a supported sign to begin'
                 : 'Turn on camera or type below to practice'}
             </p>
             <p className="text-xs text-deep-brown/55 max-w-xs mx-auto font-sans">
-              Perform an ISL sign (such as Namaste, Thank You, or Alphabets) in front of the camera.
+              Perform an ISL sign (such as Namaste, Morning, Night, Thank You, Food, Water, or Alphabets) in front of the camera.
             </p>
           </div>
         )}
@@ -116,6 +177,52 @@ export function RecognitionOutput({
         />
       </div>
 
+      {/* Quick Target Practice Sign Selector */}
+      {onSelectTargetSign && (
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between text-xs text-deep-brown/70 font-semibold">
+            <span>🎯 Practice a Specific Sign</span>
+            <span className="text-[10px] text-deep-brown/50">Tap to set target</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+            {[
+              'Namaste',
+              'Morning',
+              'Night',
+              'Good',
+              'Thank you',
+              'Water',
+              'Food',
+              'Help',
+              'Friend',
+              'Book',
+              'Love',
+              'Yes',
+              'No',
+              'One',
+              'Two',
+              'Stop',
+            ].map((signName) => {
+              const isSelected = targetSign?.toLowerCase() === signName.toLowerCase();
+              return (
+                <button
+                  key={signName}
+                  type="button"
+                  onClick={() => onSelectTargetSign(signName)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'bg-terracotta text-cream-white border-terracotta shadow-xs'
+                      : 'bg-cream-white text-deep-brown border-warm-sand hover:border-terracotta/40'
+                  }`}
+                >
+                  {signName}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Low-Confidence Correction Fallback: "Did you mean: [X]?" */}
       {isCameraActive && confidencePercent > 0 && confidencePercent < 75 && (
         <div className="p-3 bg-turmeric/15 border border-turmeric/40 rounded-2xl space-y-2 animate-slide-up">
@@ -127,7 +234,7 @@ export function RecognitionOutput({
             <span className="text-[10px] text-deep-brown/60 font-mono">Tap to select</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {['Namaste', 'Hello', 'Thank you', 'Good', 'Help', 'Yes', 'No'].map((suggestion) => (
+            {['Namaste', 'Morning', 'Night', 'Hello', 'Thank you', 'Good', 'Water', 'Food', 'Help', 'Yes', 'No'].map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"

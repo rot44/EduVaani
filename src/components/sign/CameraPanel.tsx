@@ -11,6 +11,7 @@ import {
   isModelLoaded,
   getRecognitionEngine,
   setRecognitionEngine,
+  setTargetPracticeSign,
   type RecognitionResult,
   type RecognitionEngineType,
 } from '../../lib/signLanguage';
@@ -20,6 +21,7 @@ export interface CameraPanelProps {
   onCameraToggle: (active: boolean) => void;
   onLearnWithoutCamera: () => void;
   onRecognitionResult?: (result: RecognitionResult) => void;
+  targetSign?: string | null;
 }
 
 export function CameraPanel({
@@ -27,6 +29,7 @@ export function CameraPanel({
   onCameraToggle,
   onLearnWithoutCamera,
   onRecognitionResult,
+  targetSign,
 }: CameraPanelProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -83,6 +86,10 @@ export function CameraPanel({
     };
   }, [stopMediaTracks]);
 
+  useEffect(() => {
+    setTargetPracticeSign(targetSign || null);
+  }, [targetSign]);
+
   // Start Recognition when video is ready
   const handleStartRecognitionPipeline = useCallback(() => {
     if (videoRef.current && onRecognitionResult) {
@@ -91,10 +98,11 @@ export function CameraPanel({
         (res) => {
           onRecognitionResult(res);
         },
-        canvasRef.current || undefined
+        canvasRef.current || undefined,
+        targetSign || null
       );
     }
-  }, [onRecognitionResult]);
+  }, [onRecognitionResult, targetSign]);
 
   const startCamera = async () => {
     try {
@@ -276,10 +284,20 @@ export function CameraPanel({
 
         {/* Hand Placement Guide Overlay when camera is active */}
         {isCameraActive && (
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-4 z-20">
-            <div className="self-end px-2.5 py-1 rounded-lg bg-deep-brown/70 backdrop-blur-sm text-[10px] text-cream-white font-mono flex items-center gap-1.5 shadow-sm">
-              <Shield className="h-3 w-3 text-turmeric" />
-              <span>30 FPS • Local Kinematic Feed</span>
+          <div className="absolute inset-0 pointer-events-none p-4 flex flex-col items-center justify-between z-20">
+            <div className="w-full flex items-center justify-between">
+              {targetSign ? (
+                <div className="px-3 py-1 rounded-full bg-peacock-teal/90 backdrop-blur-sm text-[11px] text-cream-white font-bold flex items-center gap-1.5 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-turmeric animate-pulse" />
+                  <span>Target Sign: {targetSign}</span>
+                </div>
+              ) : (
+                <div />
+              )}
+              <div className="px-2.5 py-1 rounded-lg bg-deep-brown/70 backdrop-blur-sm text-[10px] text-cream-white font-mono flex items-center gap-1.5 shadow-sm">
+                <Shield className="h-3 w-3 text-turmeric" />
+                <span>30 FPS • Local Kinematic Feed</span>
+              </div>
             </div>
 
             {/* Dotted Hand Framing Box */}

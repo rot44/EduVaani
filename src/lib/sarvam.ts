@@ -23,7 +23,10 @@ class SarvamService {
   private currentAudio: HTMLAudioElement | null = null;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_SARVAM_API_KEY || '';
+    this.apiKey =
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SARVAM_API_KEY) ||
+      (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.VITE_SARVAM_API_KEY) ||
+      '';
   }
 
   isConfigured(): boolean {

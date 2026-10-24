@@ -6,7 +6,13 @@ export interface CoachingTip {
   explanationHindi: string;
   fluencyScore: number;
   rule: string;
+  islGloss?: string;
+  islGrammarTip?: string;
+  islHandshapeTip?: string;
 }
+
+export type TutorMode = 'spoken' | 'isl';
+export type ISLWorkflowPhase = 'warmup' | 'teach' | 'practice' | 'review';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -25,9 +31,83 @@ export interface RoleplayScenario {
   systemPrompt: string;
   gradient: string;
   suggestedPhrases: string[];
+  mode?: TutorMode;
 }
 
 export const ROLEPLAY_SCENARIOS: RoleplayScenario[] = [
+  {
+    id: 'isl-daily',
+    title: 'दैनिक सांकेतिक भाषा (Daily ISL Essentials)',
+    description: 'Learn everyday ISL signs — greetings, polite phrases, numbers 1-20, colors, and needs!',
+    emoji: '🤟',
+    mode: 'isl',
+    context: 'Interactive ISL classroom practicing daily conversation and essential signs',
+    gradient: 'from-amber-500 to-teal-600',
+    systemPrompt: `You are EduVaani's master Indian Sign Language (ISL) tutor certified under ISLRTC standards.
+Teach daily essential signs: Namaste, Hello, Thank you, Please, Yes, No, Good, Water, Food, Numbers 1 to 20, and Colors.
+Structure your turn according to the current pedagogical phase (Warm-up -> Teach -> Practice -> Review).
+Coach authentic ISL Subject-Object-Verb (SOV) order and Time-First syntax. Keep responses under 45 words using words from our 300+ ISL vocabulary.`,
+    suggestedPhrases: [
+      'Namaste! Good morning',
+      'Please give me water',
+      'I want two apples today',
+      'Thank you very much',
+    ],
+  },
+  {
+    id: 'isl-family',
+    title: 'परिवार और रिश्ते (ISL Family & Relations)',
+    description: 'Master ISL signs for family members — mother, father, brother, sister, and home life.',
+    emoji: '👨‍👩‍👧‍👦',
+    mode: 'isl',
+    context: 'Practicing ISL signs for family members, emotions, and household moments',
+    gradient: 'from-rose-500 to-purple-600',
+    systemPrompt: `You are EduVaani's ISL tutor teaching Indian Sign Language family and emotion signs.
+Cover: Mother, Father, Brother, Sister, Son, Daughter, Baby, Family, Happy, Sad, Love, Home.
+Always guide the student on two-handed conventions and SOV order (e.g. "I love my family" -> MY FAMILY I LOVE). Keep responses under 45 words.`,
+    suggestedPhrases: [
+      'This is my mother and father',
+      'I have one brother and one sister',
+      'My family is very happy',
+      'I love my mother',
+    ],
+  },
+  {
+    id: 'isl-food',
+    title: 'खान-पान और बाज़ार (Food, Drinks & Market)',
+    description: 'Sign with confidence at restaurants and markets — tea, roti, fruits, prices, and hunger.',
+    emoji: '🍛',
+    mode: 'isl',
+    context: 'At an Indian eatery or bazaar communicating through Indian Sign Language',
+    gradient: 'from-orange-500 to-amber-600',
+    systemPrompt: `You are an ISL tutor guiding a student to sign in dining and market situations.
+Vocabulary: Water, Tea, Milk, Rice, Roti, Dal, Bread, Apple, Banana, Eat, Drink, Hungry, Thirsty, How much, One to twenty.
+Coach the omission of copulas ('is') and Wh-movement to the end ("How much is tea?" -> TEA HOW MUCH). Keep responses under 45 words.`,
+    suggestedPhrases: [
+      'I am very hungry today',
+      'Please give me hot tea and milk',
+      'How much for two kilos mangoes?',
+      'Food is delicious thank you',
+    ],
+  },
+  {
+    id: 'isl-emergency',
+    title: 'मदद और सुरक्षा (Help & Safety ISL)',
+    description: 'Crucial emergency signs — help, doctor, medicine, police, stop, and pain.',
+    emoji: '🚨',
+    mode: 'isl',
+    context: 'Learning vital safety, health, and emergency communication in ISL',
+    gradient: 'from-red-500 to-rose-700',
+    systemPrompt: `You are EduVaani's compassionate ISL tutor teaching critical emergency signs.
+Vocabulary: Help, Doctor, Police, Hospital, Pain, Stomach, Head, Stop, Wait, Medicine, Call.
+Demonstrate two-handed help (fist on flat palm) and clear, expressive facial non-manual markers. Keep responses under 40 words.`,
+    suggestedPhrases: [
+      'Please help me quickly',
+      'Where is the doctor hospital?',
+      'I have head pain',
+      'Please call police now',
+    ],
+  },
   {
     id: 'bazaar',
     title: 'भारतीय बाज़ार (Indian Bazaar)',
@@ -169,6 +249,8 @@ export class AIService {
   private genAI: GoogleGenerativeAI | null = null;
   private chatHistory: ChatMessage[] = [];
   private currentScenario: RoleplayScenario | null = null;
+  private tutorMode: TutorMode = 'spoken';
+  private islPhase: ISLWorkflowPhase = 'warmup';
   private candidateModels: string[] = [
     'gemini-3.5-flash-lite',
     'gemini-flash-lite-latest',
@@ -176,13 +258,40 @@ export class AIService {
   ];
 
   constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey =
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) ||
+      (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.VITE_GEMINI_API_KEY);
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
     }
   }
 
+  setTutorMode(mode: TutorMode): void {
+    this.tutorMode = mode;
+  }
+
+  getTutorMode(): TutorMode {
+    return this.tutorMode;
+  }
+
+  setISLPhase(phase: ISLWorkflowPhase): void {
+    this.islPhase = phase;
+  }
+
+  getISLPhase(): ISLWorkflowPhase {
+    return this.islPhase;
+  }
+
+  advanceISLPhase(): ISLWorkflowPhase {
+    const order: ISLWorkflowPhase[] = ['warmup', 'teach', 'practice', 'review'];
+    const idx = order.indexOf(this.islPhase);
+    const next = order[(idx + 1) % order.length];
+    this.islPhase = next;
+    return next;
+  }
+
   async startFreeFlowChat(): Promise<string> {
+    this.tutorMode = 'spoken';
     this.currentScenario = null;
     this.chatHistory = [];
     const welcome = "Namaste! 🙏 I'm EduVaani, your personal AI English tutor. I'm here to help you speak English naturally and fearlessly. Tell me, how was your day today, or what would you like to talk about?";
@@ -190,12 +299,32 @@ export class AIService {
     return welcome;
   }
 
+  async startISLTutor(initialPhase: ISLWorkflowPhase = 'warmup'): Promise<string> {
+    this.tutorMode = 'isl';
+    this.islPhase = initialPhase;
+    this.currentScenario = null;
+    this.chatHistory = [];
+    const welcome = "Namaste! 🙏 I am your Indian Sign Language (ISL) AI tutor. Today we will practice authentic signs and Subject-Object-Verb (SOV) sentence structure. Let us start our warm-up — how are you feeling today?";
+    this.addMessage('assistant', welcome, {
+      original: 'Namaste',
+      improved: 'Namaste! Welcome to ISL practice.',
+      explanationHindi: 'भारतीय सांकेतिक भाषा (ISL) में आपका स्वागत है। चलिए अभ्यास शुरू करते हैं।',
+      fluencyScore: 100,
+      rule: 'Warm-up Greeting',
+      islGloss: 'NAMASTE WELCOME',
+      islGrammarTip: 'Namaste is signed with both palms pressed flat at chest center (prayer posture).',
+      islHandshapeTip: 'Two-handed midline prayer handshape with gentle head nod.',
+    });
+    return welcome;
+  }
+
   async startRoleplay(scenarioId: string): Promise<string> {
     const scenario = ROLEPLAY_SCENARIOS.find(s => s.id === scenarioId);
     if (!scenario) throw new Error('Scenario not found');
     this.currentScenario = scenario;
+    this.tutorMode = scenario.mode || 'spoken';
     this.chatHistory = [];
-    const welcome = `Namaste! Welcome to ${scenario.title} ${scenario.emoji}. ${scenario.description} Speak in English or your mother tongue whenever you're ready — I am listening!`;
+    const welcome = `Namaste! Welcome to ${scenario.title} ${scenario.emoji}. ${scenario.description} Speak in English or sign whenever you're ready — I am listening!`;
     this.addMessage('assistant', welcome);
     return welcome;
   }
@@ -203,11 +332,35 @@ export class AIService {
   async sendMessage(userInput: string): Promise<string> {
     this.addMessage('user', userInput);
 
+    const isISL = this.tutorMode === 'isl' || (this.currentScenario?.mode === 'isl');
+
     let prompt = '';
-    if (this.currentScenario) {
-      prompt = `${this.currentScenario.systemPrompt}\n\nContext: ${this.currentScenario.context}\n\n`;
+
+    if (isISL) {
+      prompt = `You are EduVaani's master Indian Sign Language (ISL) AI Tutor, strictly aligned with ISLRTC (Indian Sign Language Research and Training Centre) standards.
+Current Pedagogical Phase: [${this.islPhase.toUpperCase()}]
+- WARMUP: Greet warmly, build confidence, establish the topic (e.g. daily essentials, family, food, numbers 1-20, colors).
+- TEACH: Introduce 1-2 target vocabulary signs from our 300+ word database. Detail two-handed conventions, handshape, touch point, and facial expression.
+- PRACTICE: Ask the student to sign or structure a sentence using authentic ISL grammar.
+- REVIEW: Praise progress, highlight the Subject-Object-Verb (SOV) order, and summarize signs.
+
+CRITICAL ISL LINGUISTIC RULES TO COACH:
+1. Sentence Word Order is strictly Subject-Object-Verb (SOV). Example: "I learn English" -> I ENGLISH LEARN.
+2. Time-First Rule: Temporal markers (Today, Tomorrow, Yesterday, Morning, Now) MUST appear at the very beginning of the clause. Example: "I eat apples today" -> TODAY I APPLES EAT.
+3. Wh-Movement: Wh-question words (What, Where, Why, How, Who) move to the very end of the sentence with raised/furrowed brows. Example: "What is your name?" -> YOUR NAME WHAT.
+4. Omission of English copulas & articles: Words like 'is', 'am', 'are', 'was', 'were', 'a', 'an', 'the' do NOT exist in ISL and are omitted.
+5. Vocabulary: Restrict conversational reply to simple, highly signable English words from our 300+ ISL dictionary so the avatar can animate them smoothly without excessive fingerspelling.
+
+`;
+      if (this.currentScenario) {
+        prompt += `Scenario Context: ${this.currentScenario.context}\n${this.currentScenario.systemPrompt}\n\n`;
+      }
     } else {
-      prompt = 'You are EduVaani, a warm, patient, and encouraging AI English tutor for Indian students. Help them practice spoken English. Keep your conversational response under 50 words, simple, and friendly.\n\n';
+      if (this.currentScenario) {
+        prompt = `${this.currentScenario.systemPrompt}\n\nContext: ${this.currentScenario.context}\n\n`;
+      } else {
+        prompt = 'You are EduVaani, a warm, patient, and encouraging AI English tutor for Indian students. Help them practice spoken English. Keep your conversational response under 50 words, simple, and friendly.\n\n';
+      }
     }
 
     const recentHistory = this.chatHistory.slice(-8);
@@ -216,7 +369,27 @@ export class AIService {
       prompt += `${msg.role === 'user' ? 'Student' : 'EduVaani'}: ${msg.content}\n`;
     });
 
-    prompt += `
+    if (isISL) {
+      prompt += `
+Instruction:
+1. Respond as EduVaani ISL Tutor in character for Phase [${this.islPhase.toUpperCase()}]. Keep conversational reply under 45 words using signable vocabulary.
+2. Provide precise ISL grammatical transformation & handshape coaching for Student's input ("${userInput}").
+
+Format your response EXACTLY as:
+[REPLY]
+<Conversational response here>
+
+[COACH]
+Improved: <A natural English sentence equivalent>
+ISLGloss: <Authentic ISL sentence gloss in Time-First + SOV order, e.g. TODAY I TWO APPLES EAT>
+ISLGrammarTip: <1 sentence explaining why words are ordered in SOV or Time-First, or omitted copulas>
+ISLHandshape: <1 sentence describing key handshape, two-handed touch point, or facial non-manual marker>
+HindiTip: <1 short sentence in Hindi explaining the sign nuance or cheering them on>
+Score: <Score from 75 to 100>
+Rule: <Short 3-6 word grammar or sign description rule>
+`;
+    } else {
+      prompt += `
 Instruction:
 1. Respond naturally as ${this.currentScenario ? 'the character' : 'EduVaani'}. Keep answer conversational, relatable, and under 50 words.
 2. Provide gentle grammar & fluency coaching on the Student's message ("${userInput}").
@@ -231,6 +404,7 @@ HindiTip: <1 short sentence in Hindi explaining the nuance or cheering them on>
 Score: <Score from 70 to 100>
 Rule: <Short 3-6 word grammar or phrasing tip>
 `;
+    }
 
     // 1. Try Google Gemini candidate models
     if (this.genAI) {
@@ -240,7 +414,7 @@ Rule: <Short 3-6 word grammar or phrasing tip>
           const result = await model.generateContent(prompt);
           const rawText = result.response.text();
           if (rawText && rawText.trim().length > 0) {
-            const { reply, coachingTip } = this.parseResponse(rawText, userInput);
+            const { reply, coachingTip } = this.parseResponse(rawText, userInput, isISL);
             this.addMessage('assistant', reply, coachingTip);
             return reply;
           }
@@ -251,12 +425,16 @@ Rule: <Short 3-6 word grammar or phrasing tip>
     }
 
     // 2. Resilient contextual response generator (Guarantees zero downtime)
-    const { reply, coachingTip } = this.generateSmartFallback(userInput, this.currentScenario);
+    const { reply, coachingTip } = this.generateSmartFallback(userInput, this.currentScenario, isISL);
     this.addMessage('assistant', reply, coachingTip);
     return reply;
   }
 
-  private parseResponse(raw: string, originalInput: string): { reply: string; coachingTip?: CoachingTip } {
+  private parseResponse(
+    raw: string,
+    originalInput: string,
+    isISL: boolean = false
+  ): { reply: string; coachingTip?: CoachingTip } {
     let reply = raw.trim();
     let coachingTip: CoachingTip | undefined = undefined;
 
@@ -269,6 +447,9 @@ Rule: <Short 3-6 word grammar or phrasing tip>
       const hindiMatch = coachSection.match(/HindiTip:\s*(.+)/i);
       const scoreMatch = coachSection.match(/Score:\s*(\d+)/i);
       const ruleMatch = coachSection.match(/Rule:\s*(.+)/i);
+      const islGlossMatch = coachSection.match(/ISLGloss:\s*(.+)/i);
+      const islGrammarMatch = coachSection.match(/ISLGrammarTip:\s*(.+)/i);
+      const islHandshapeMatch = coachSection.match(/ISLHandshape:\s*(.+)/i);
 
       if (improvedMatch && hindiMatch) {
         coachingTip = {
@@ -276,7 +457,10 @@ Rule: <Short 3-6 word grammar or phrasing tip>
           improved: improvedMatch[1].trim(),
           explanationHindi: hindiMatch[1].trim(),
           fluencyScore: scoreMatch ? parseInt(scoreMatch[1], 10) : 85,
-          rule: ruleMatch ? ruleMatch[1].trim() : 'Natural Conversation'
+          rule: ruleMatch ? ruleMatch[1].trim() : (isISL ? 'ISL Grammar Syntax' : 'Natural Conversation'),
+          islGloss: islGlossMatch ? islGlossMatch[1].trim() : undefined,
+          islGrammarTip: islGrammarMatch ? islGrammarMatch[1].trim() : undefined,
+          islHandshapeTip: islHandshapeMatch ? islHandshapeMatch[1].trim() : undefined,
         };
       }
     } else if (raw.includes('[REPLY]')) {
@@ -286,8 +470,75 @@ Rule: <Short 3-6 word grammar or phrasing tip>
     return { reply, coachingTip };
   }
 
-  private generateSmartFallback(input: string, scenario: RoleplayScenario | null): { reply: string; coachingTip: CoachingTip } {
+  private generateSmartFallback(
+    input: string,
+    scenario: RoleplayScenario | null,
+    isISL: boolean = false
+  ): { reply: string; coachingTip: CoachingTip } {
     const text = input.toLowerCase();
+
+    // ISL Smart Fallback with authentic ISLRTC glosses & SOV structure
+    if (isISL || scenario?.mode === 'isl') {
+      if (text.includes('water') || text.includes('drink') || text.includes('tea')) {
+        return {
+          reply: "Very good! For water, make a W-handshape with three fingers and tap near your chin. What would you like to drink?",
+          coachingTip: {
+            original: input,
+            improved: "Please give me a glass of drinking water.",
+            explanationHindi: "पानी का संकेत देने के लिए 'W' आकार बनाकर होंठों के पास स्पर्श करें।",
+            fluencyScore: 92,
+            rule: "Drink & Need ISL Signs",
+            islGloss: "PLEASE WATER GIVE ME",
+            islGrammarTip: "In ISL SOV syntax: Object (Water) comes before the action verb (Give).",
+            islHandshapeTip: "Three fingers extended (W) touching chin, followed by palm open giving gesture.",
+          },
+        };
+      } else if (text.includes('apple') || text.includes('food') || text.includes('eat') || text.includes('fruit')) {
+        return {
+          reply: "Wonderful signing! Remember in ISL, Time comes first: 'Today I two apples eat'. Let us practice eating fruits!",
+          coachingTip: {
+            original: input,
+            improved: "I want to eat fresh apples today.",
+            explanationHindi: "समय (Today) हमेशा वाक्य के शुरू में आता है, और क्रिया (Eat) सबसे अंत में।",
+            fluencyScore: 90,
+            rule: "Time-First SOV Syntax",
+            islGloss: "TODAY I APPLE EAT WANT",
+            islGrammarTip: "Time marker 'TODAY' is positioned first to set temporal reference in ISL.",
+            islHandshapeTip: "Curved index knuckle twists against cheek for Apple, hand to mouth for Eat.",
+          },
+        };
+      } else if (text.includes('family') || text.includes('mother') || text.includes('father') || text.includes('brother')) {
+        return {
+          reply: "Excellent family sign! Two-handed gestures are core to ISLRTC standards. Tell me about your brother or sister!",
+          coachingTip: {
+            original: input,
+            improved: "My family is very loving and happy.",
+            explanationHindi: "परिवार के संकेतों में माता (कान की बाली) और पिता (मूंछ) के संकेत बहुत सुंदर हैं।",
+            fluencyScore: 89,
+            rule: "Family Two-Handed Conventions",
+            islGloss: "MY FAMILY HAPPY ALL LOVE",
+            islGrammarTip: "Adjectives and emotions (HAPPY) precede or accompany the final verb.",
+            islHandshapeTip: "Both curved hands circle together clasping in unity for Family.",
+          },
+        };
+      } else {
+        return {
+          reply: "Namaste! Welcome to our ISL lesson. Let us warm up with everyday signs. What sign would you like to practice?",
+          coachingTip: {
+            original: input,
+            improved: "Namaste, I want to learn Indian Sign Language today.",
+            explanationHindi: "नमस्ते संकेत दोनों हथेलियों को छाती के बीच जोड़कर सम्मान से किया जाता है।",
+            fluencyScore: 88,
+            rule: "Warm-Up ISL Foundation",
+            islGloss: "NAMASTE ISL I LEARN WANT",
+            islGrammarTip: "Subject (I) and Object (ISL) precede the main verb (LEARN WANT).",
+            islHandshapeTip: "Two flat palms pressed together upright at chest midline.",
+          },
+        };
+      }
+    }
+
+    // Spoken English Fallbacks
     let reply = "That's wonderful! You expressed yourself very clearly. Tell me more about that!";
     let improved = input.trim();
     let explanationHindi = "बहुत बढ़िया प्रयास! बात करते समय स्पष्ट उच्चारण पर ध्यान दें।";

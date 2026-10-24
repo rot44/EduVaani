@@ -61,6 +61,30 @@ export function CoachingCard({
             &quot;{coachingTip.improved}&quot;
           </p>
 
+          {/* ISL Gloss & SOV Grammar when available */}
+          {coachingTip.islGloss && (
+            <div className="bg-cream-white/80 border border-warm-sand/80 rounded-xl p-2.5 space-y-1">
+              <p className="text-terracotta font-semibold text-[11px]">
+                <span>🤟 ISL Gloss (SOV): </span>
+                <span className="font-mono text-terracotta-hover bg-warm-sand/50 px-1.5 py-0.5 rounded font-bold">
+                  {coachingTip.islGloss}
+                </span>
+              </p>
+              {coachingTip.islGrammarTip && (
+                <p className="text-deep-brown/80 text-[10.5px] leading-relaxed">
+                  <span className="font-semibold text-deep-brown">ISL Rule: </span>
+                  {coachingTip.islGrammarTip}
+                </p>
+              )}
+              {coachingTip.islHandshapeTip && (
+                <p className="text-peacock-teal-dark/80 text-[10px] italic leading-tight">
+                  <span className="font-medium not-italic">Sign Handshape: </span>
+                  {coachingTip.islHandshapeTip}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Hindi Cultural Explanation / Hint */}
           {coachingTip.explanationHindi && (
             <p className="text-deep-brown/80 leading-relaxed font-sans">

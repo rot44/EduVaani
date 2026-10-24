@@ -4,6 +4,7 @@ import { Badge } from '../ui/badge';
 import type { SignGenerationResult } from '../../lib/signGeneration';
 import { speechService } from '../../lib/speech';
 import signAnimationsData from '../../data/isl-sign-animations.json';
+import { ISLSignVisualizer } from './ISLSignVisualizer';
 
 // Backward-compatible dictionary export for SignInstructions
 export const ISL_DICTIONARY = Object.entries(signAnimationsData.words).reduce(
@@ -137,7 +138,12 @@ export function SignGenerationOutput({
                     : 'bg-warm-sand/60 text-deep-brown hover:bg-warm-sand'
                 }`}
               >
-                <span>{item.signData.emoji}</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-black/10">
+                  {idx + 1}
+                </span>
+                <span className="text-xs" title={item.signData.hands === 'two-handed' ? 'Two-Handed Sign' : 'One-Handed Sign'}>
+                  {item.signData.hands === 'two-handed' ? '👐' : '✋'}
+                </span>
                 <span>{item.displayWord}</span>
                 {item.signType === 'fingerspell' && (
                   <span className="text-[9px] px-1 py-0.2 rounded bg-black/10 text-current">
@@ -151,7 +157,7 @@ export function SignGenerationOutput({
       )}
 
       {/* Main Sign Visualization Stage */}
-      <div className="rounded-2xl border border-warm-sand bg-cream-white p-6 sm:p-8 min-h-[240px] flex flex-col items-center justify-center text-center relative overflow-hidden shadow-inner">
+      <div className="rounded-2xl border border-warm-sand bg-cream-white p-4 sm:p-6 min-h-[260px] flex flex-col items-center justify-center text-center relative overflow-hidden shadow-inner">
         {!hasSequence ? (
           <div className="space-y-2 py-4">
             <div className="text-4xl">🤟</div>
@@ -163,16 +169,14 @@ export function SignGenerationOutput({
             </p>
           </div>
         ) : currentItem ? (
-          <div className="space-y-4 max-w-md mx-auto animate-slide-up w-full">
-            {/* Hand Posture Icon Orb with Animation Style */}
-            <div className="relative mx-auto w-24 h-24 rounded-3xl bg-gradient-to-br from-warm-sand/50 via-warm-ivory to-warm-sand/80 border-2 border-peacock-teal/30 flex items-center justify-center text-5xl shadow-warm-sm">
-              <span className="transform transition-transform hover:scale-110">
-                {currentItem.signData.emoji}
-              </span>
-              <div className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-peacock-teal text-cream-white text-[10px] font-bold shadow-xs">
-                {currentItem.signData.hands === 'two-handed' ? 'Two-Handed' : 'One-Handed'}
-              </div>
-            </div>
+          <div className="space-y-4 max-w-lg mx-auto animate-slide-up w-full flex flex-col items-center">
+            {/* Authentic ISL Hand Posture & Kinematic Motion Visualizer (Replaces generic emojis) */}
+            <ISLSignVisualizer
+              signData={currentItem.signData}
+              signType={currentItem.signType}
+              word={currentItem.word}
+              isPlaying={isPlaying}
+            />
 
             {/* Title & Meaning */}
             <div className="space-y-1.5 pt-1">

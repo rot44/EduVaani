@@ -6,6 +6,7 @@ import { SectionHeading } from '../components/ui/section-heading';
 import { Badge } from '../components/ui/badge';
 import { textToSignSequence, type SignGenerationResult } from '../lib/signGeneration';
 import { multimodalManager, type UnifiedMessage } from '../lib/multimodal';
+import { aiService, type ISLWorkflowPhase } from '../lib/ai';
 
 // Modular Sign Components
 import { CameraPanel } from '../components/sign/CameraPanel';
@@ -16,6 +17,9 @@ import { SignInstructions } from '../components/sign/SignInstructions';
 import { MessageBubble } from '../components/tutor/MessageBubble';
 
 export default function SignLanguageTutor() {
+  // Pedagogical 4-phase workflow state (Warm-up -> Teach -> Practice -> Review)
+  const [islPhase, setIslPhase] = useState<ISLWorkflowPhase>(() => aiService.getISLPhase());
+
   // Camera & Recognition State
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [recognizedSign, setRecognizedSign] = useState<string | null>(null);
@@ -44,6 +48,14 @@ export default function SignLanguageTutor() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiResponseText, setAiResponseText] = useState<string | null>(null);
+  const [targetPracticeSign, setTargetPracticeSign] = useState<string | null>(null);
+
+  // Derive active sign from current playback sequence, or user manual selection
+  const activeSequenceSign =
+    signResult?.sequence?.[currentStepIndex]?.signData?.label ||
+    signResult?.sequence?.[currentStepIndex]?.word ||
+    null;
+  const effectiveTargetSign = targetPracticeSign || activeSequenceSign;
 
   // Convert input text to ISL sign sequence
   const handleConvertToSigns = (text: string) => {
@@ -52,6 +64,7 @@ export default function SignLanguageTutor() {
     setCurrentStepIndex(0);
     setIsPlaying(true);
     setAiResponseText(null);
+    setTargetPracticeSign(null);
   };
 
   // Ask Gemini AI: routes through Multimodal Communication Manager
@@ -209,6 +222,50 @@ export default function SignLanguageTutor() {
             subtitle="Practice Indian Sign Language (ISL) using real-time webcam gesture detection and text-to-sign visual translations."
             align="center"
           />
+
+          {/* Pedagogical 4-Phase Workflow Strip */}
+          <div className="mt-6 bg-warm-ivory border border-warm-sand rounded-2xl p-2.5 sm:p-3 shadow-warm-sm max-w-4xl mx-auto">
+            <div className="flex items-center justify-between text-xs font-semibold text-deep-brown mb-2 px-1">
+              <span className="flex items-center gap-1.5 text-terracotta">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Pedagogical Lesson Workflow</span>
+              </span>
+              <span className="text-[11px] text-deep-brown/65 font-normal">
+                ISLRTC Standardized Curriculum
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: 'warmup', label: '1. Warm-up 🌅', desc: 'Greetings & comfort' },
+                { id: 'teach', label: '2. Teach 📖', desc: '300+ signs & handshapes' },
+                { id: 'practice', label: '3. Practice 🤟', desc: 'SOV sentence order' },
+                { id: 'review', label: '4. Review ⭐', desc: 'Fluency & feedback' },
+              ].map((p) => {
+                const active = islPhase === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      aiService.setISLPhase(p.id as ISLWorkflowPhase);
+                      setIslPhase(p.id as ISLWorkflowPhase);
+                    }}
+                    className={`p-2.5 rounded-xl text-left transition-all cursor-pointer border ${
+                      active
+                        ? 'bg-terracotta text-cream-white border-terracotta shadow-warm-sm ring-2 ring-terracotta/20'
+                        : 'bg-cream-white hover:bg-warm-sand/50 text-deep-brown border-warm-sand'
+                    }`}
+                  >
+                    <p className="font-bold text-xs truncate">{p.label}</p>
+                    <p className={`text-[10px] mt-0.5 truncate ${active ? 'text-cream-white/90' : 'text-deep-brown/70'}`}>
+                      {p.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Two-Column Responsive Workspace Layout:
@@ -223,6 +280,7 @@ export default function SignLanguageTutor() {
               onCameraToggle={setIsCameraActive}
               onLearnWithoutCamera={() => setIsCameraActive(false)}
               onRecognitionResult={handleRecognitionResult}
+              targetSign={effectiveTargetSign}
             />
 
             <RecognitionOutput
@@ -232,6 +290,8 @@ export default function SignLanguageTutor() {
               isCameraActive={isCameraActive}
               onSendToConversation={handleSendToConversation}
               recentRecognitions={recentRecognitions}
+              targetSign={effectiveTargetSign}
+              onSelectTargetSign={(sign) => setTargetPracticeSign(sign)}
             />
           </div>
 
@@ -277,6 +337,7 @@ export default function SignLanguageTutor() {
               onSelectStep={(idx) => {
                 setCurrentStepIndex(idx);
                 setIsPlaying(false);
+                setTargetPracticeSign(null);
               }}
             />
 
@@ -284,6 +345,7 @@ export default function SignLanguageTutor() {
               onSelectSign={(word) => {
                 setInputText(word);
                 handleConvertToSigns(word);
+                setTargetPracticeSign(word);
               }}
             />
           </div>
