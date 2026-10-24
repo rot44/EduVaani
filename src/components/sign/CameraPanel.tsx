@@ -44,6 +44,20 @@ export function CameraPanel({
   const [modelStatusMsg, setModelStatusMsg] = useState<string>('');
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [currentEngine, setCurrentEngine] = useState<RecognitionEngineType>(getRecognitionEngine());
+  const [showGuideMessage, setShowGuideMessage] = useState(true);
+
+  // Hide guide message 10 seconds after camera becomes active
+  useEffect(() => {
+    if (isCameraActive) {
+      setShowGuideMessage(true);
+      const timer = setTimeout(() => {
+        setShowGuideMessage(false);
+      }, 10000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowGuideMessage(true);
+    }
+  }, [isCameraActive]);
 
   // Resize and orientation listener for mobile video & canvas
   useEffect(() => {
@@ -301,10 +315,12 @@ export function CameraPanel({
             </div>
 
             {/* Dotted Hand Framing Box */}
-            <div className="w-3/4 max-w-xs h-44 rounded-2xl border-2 border-dashed border-turmeric/85 bg-turmeric/5 flex items-center justify-center text-center p-3">
-              <span className="text-[11px] font-semibold text-deep-brown bg-cream-white/95 px-3 py-1 rounded-full shadow-warm-sm border border-warm-sand">
-                Keep hands inside this guide frame
-              </span>
+            <div className="w-3/4 max-w-xs h-44 rounded-2xl border-2 border-dashed border-turmeric/85 bg-turmeric/5 flex items-center justify-center text-center p-3 relative">
+              {showGuideMessage && (
+                <span className="text-[11px] font-semibold text-deep-brown bg-cream-white/95 px-3 py-1 rounded-full shadow-warm-sm border border-warm-sand transition-opacity duration-500 animate-in fade-in">
+                  Keep hands inside this guide frame
+                </span>
+              )}
             </div>
 
             <div className="text-[11px] text-deep-brown bg-cream-white/90 backdrop-blur-sm px-3 py-0.5 rounded-full shadow-sm font-medium border border-warm-sand">
