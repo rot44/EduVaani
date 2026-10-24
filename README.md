@@ -1,174 +1,208 @@
-# 🎙️ EduVaani (एजुवाणी) — AI English Voice & Sign Tutor for India
+# EduVaani (एजुवाणी)
 
-> **A voice-first, culturally-grounded AI English & Indian Sign Language (ISL) tutor built for learners across India. Practice conversational English naturally with real-time speech, instant translation into 8 Indian regional languages, an authentic Indian Sign Language studio, and culturally-grounded real-world scenarios.**
-
-EduVaani bridges the linguistic and accessibility divide across Bharat by unifying spoken voice, text, and Indian Sign Language (ISL) into one seamless, accessible learning companion.
+An accessible multimodal AI English and Indian Sign Language tutor engineered for learners across India. EduVaani integrates conversational voice practice, real-time vernacular translation across eight Indian regional languages, and an Indian Sign Language studio powered by on-device computer vision.
 
 ---
 
-## 🌟 Key Highlights
+## System Architecture
 
-### 🗣️ Voice-First Learning & Multimodal Hub
-- **Interactive AI Voice Orb**: Speak into the glowing AI Orb with real-time speech recognition and lifelike responses.
-- **Multimodal Communication Hub**: Effortlessly switch between **Voice**, **Text**, and **Sign Language** input and output modes at any point during conversations.
-- **8 Indian Regional Languages**: Real-time vernacular translations in Hindi (हिंदी), Marathi (मराठी), Gujarati (ગુજરાતી), Tamil (தமிழ்), Telugu (తెలుగు), Kannada (ಕನ್ನಡ), Bengali (বাংলা), and Indian English.
-- **Cultural Roleplay Scenarios**:
-  - 🛒 **भारतीय बाज़ार (Indian Bazaar)** — Shopping, negotiating prices, and market conversations.
-  - 🏫 **स्कूल में (School Life)** — Speaking with teachers, classmates, and questions in class.
-  - 🏥 **डॉक्टर के पास (At the Doctor)** — Describing symptoms, discussing prescriptions, and clinical consultations.
-  - ✈️ **हवाई अड्डा (Airport & Travel)** — Check-in, boarding gates, and security inquiries.
-  - 🍛 **रेस्टोरेंट (Restaurant & Dining)** — Ordering dishes, dietary preferences, and bills.
-  - 💼 **नौकरी इंटरव्यू (Job Interview)** — Practicing self-introductions, career questions, and interview answers.
-- **Real-Time Fluency & Grammar Coaching**: Constructive, encouraging feedback on every phrase with grammatical tips and celebratory confetti for milestones.
-- **Adaptive Speech Controls**: Switch between `0.85x` (Slow/Clear) and `1.0x` (Normal) playback speed with instant replay.
+EduVaani is structured around a centralized multimodal orchestration layer that synchronizes voice, text, and sign language streams into a unified conversational context.
 
----
-
-### 🤟 Indian Sign Language (ISL) Studio
-- **Two-Way Sign Language Companion**:
-  - **Camera Sign Practice**: Real-time hand landmark detection using MediaPipe with rule-based heuristics and optional Gemini Vision inference.
-  - **Text-to-Sign Generation**: Converts English words into authentic Indian Sign Language hand animations and fingerspelling sequences.
-- **Consent-First Media Handling**: Webcam and microphone are strictly permission-based; camera tracks are immediately stopped and released when deactivated or unmounted.
-- **Honest AI & Model Limitations**:
-  > ⚠️ **ISL Model Notice**: *Currently supports ISL alphabet (A-Z) and 24 common words. Full ISL sentence translation is not yet available.* EduVaani strictly avoids claiming full ISL linguistic translation, adhering to genuine ISL linguistic structures and fingerspelling standards.
-
----
-
-### 📊 Progress Analytics & Learning Insights
-- **Weekly Practice Chart**: Daily speaking minutes with 15-minute goal tracking.
-- **Fluency Progression Trend**: Historical tracking of fluency scores across practice sessions.
-- **Scenario Breakdown**: Donut visualization of scenario practice distribution.
-- **Activity Heatmap & Streak Calendar**: Visual habit tracking for learner consistency.
-- **Curriculum & Vocab Progress**: Mastery tracking of daily vocabulary and conversational terms.
+```
+                                  +-----------------------------+
+                                  |     Learner Interaction     |
+                                  |    (Voice / Sign / Text)    |
+                                  +--------------+--------------+
+                                                 |
+                                                 v
+                       +-------------------------------------------------+
+                       |         Multimodal Communication Manager        |
+                       |       (Unified Context & State Machine)         |
+                       +-------+-----------------+-----------------+-----+
+                               |                 |                 |
+             +-----------------+                 |                 +-----------------+
+             v                                   v                                   v
++--------------------------+    +--------------------------------+    +-----------------------------+
+|    Spoken Voice Stream   |    |       Gemini 2.5 Pipeline      |    |     Sign Language Studio    |
+|                          |    |                                |    |                             |
+|  * Primary: Sarvam AI    |    |  * Conversational Dialogue     |    |  * MediaPipe Vision Tasks   |
+|    - Bulbul v3 TTS       |--->|  * Indian English Grammar      |--->|    - 21 3D Hand Landmarks   |
+|    - Mayura v1 Translate |    |  * Fluency Scoring (0-100)     |    |  * ISL Geometric Heuristics |
+|    - Saaras STT          |    |  * Native Language Explanations|    |  * 324 Word Vocabulary      |
+|  * Fallback: Web Speech  |    |  * Gemini Vision Heuristics    |    |  * 26 A-Z Fingerspelling    |
+|    - WebKit Speech Rec   |    +--------------------------------+    |  * ISL Sequence Animator    |
+|    - SpeechSynthesis     |                                          +-----------------------------+
++--------------------------+
+```
 
 ---
 
-## 🚀 Tech Stack
+## Core Capabilities
 
-- **Frontend Core**: React 19, TypeScript, Vite 8
-- **Styling**: Tailwind CSS v4 with bespoke Indian aesthetic tokens (Terracotta `#C85A32`, Peacock Teal `#1F6F78`, Turmeric `#D97706`, Warm Sand `#E7D8C9`, Cream White `#FFFDF9`, Deep Brown `#2D2327`)
-- **Animation**: Framer Motion 12 (smooth page transitions, spring docks, pulse effects, 3D card flips) & Canvas Confetti
-- **Computer Vision & Gesture Recognition**:
-  - `@mediapipe/tasks-vision` (Hand landmark detection with 21 3D keypoints)
-  - Custom ISL geometric classifier & multi-stage heuristic engine
-- **AI Core**: Google Gemini Generative AI (`gemini-2.5-flash` / `gemini-flash-latest`)
-- **Indian Voice & Regional Translation**:
-  - **Sarvam AI (Bulbul TTS, Mayura Translation, Saaras STT)**: High-fidelity natural Indian voices and regional translations
-  - **Web Speech API**: Zero-dependency browser-native speech recognition & speech synthesis fallback
-- **Accessibility & Compliance**: WCAG AAA high-contrast focus rings, skip-to-content links, aria-live announcements, and reduced-motion support
+### 1. Conversational Voice Engine with Resilient Fallback
+- **Sarvam AI Indic Speech Stack**: High-fidelity Indian English and regional voice generation using Sarvam Bulbul v3 alongside Mayura v1 neural translation.
+- **Client-Side Speech Fallback**: Zero-dependency Web Speech API engine running speech recognition and local speech synthesis if network latency spikes or API limits are reached.
+- **Adaptive Cadence Control**: Toggle between 0.85x slow speed for beginners and 1.0x natural conversational pace with instant replay.
+- **Microphone Diagnostic Suite**: Integrated Web Audio API diagnostic testing noise floor, frequency distribution, and input permissions before starting sessions.
+
+### 2. Indian Sign Language (ISL) Studio
+- **On-Device Landmark Tracking**: Powered by MediaPipe Vision Tasks WebAssembly runtime, processing 21 three-dimensional keypoints per hand directly in the browser at 30+ FPS.
+- **ISLRTC Standards Alignment**: Follows structural conventions from the Indian Sign Language Research and Training Centre, including two-handed signs and Subject-Object-Verb (SOV) sentence order.
+- **Curated ISL Dataset**: 324 verified word signs across 18 real-world categories alongside 26 alphabetic manual fingerspelling configurations.
+- **Two-Way Sign Animator**: Converts typed or spoken English text into synchronized ISL hand animation sequences.
+- **Privacy-Preserving Vision**: Camera frames remain inside local browser memory. Hardware video tracks are immediately stopped upon closing the studio or changing tabs.
+
+### 3. Culturally Grounded Conversational Scenarios
+Learners practice English in familiar Indian environments rather than abstract western settings:
+- **भारतीय बाज़ार (Indian Bazaar)**: Negotiating prices, asking for fresh produce, and polite market bargaining.
+- **स्कूल में (At School)**: Interacting with teachers, clarifying doubts in class, and discussing exams.
+- **डॉक्टर के पास (At the Clinic)**: Articulating symptoms, asking about dosage schedules, and clinical guidance.
+- **हवाई अड्डा (Airport & Travel)**: Managing check-in counters, luggage drops, and boarding announcements.
+- **रेस्टोरेंट (Restaurant Dining)**: Navigating menus, specifying dietary preferences, and requesting invoices.
+- **नौकरी इंटरव्यू (Job Interview)**: Introducing professional backgrounds, discussing strengths, and answering interview prompts.
+- **कहानी मंच (Story Kingdom)**: Folk stories and creative narrative development.
+- **गली क्रिकेट (Street Cricket)**: High-energy casual chat, match rules, and sports banter.
+
+### 4. Vernacular Explanations & Grammar Coaching
+- **Eight Regional Languages Supported**: Hindi, Marathi, Gujarati, Tamil, Telugu, Kannada, Bengali, and Indian English.
+- **Contextual Corrections**: Provides side-by-side comparisons of the original phrase, the refined sentence, the grammar principle applied, and an explanation written in the user native tongue.
+- **Milestone Rewards**: Built-in streak trackers and celebratory visual confetti upon mastering vocabulary terms.
 
 ---
 
-## 📁 Project Structure
+## Technology Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Framework** | React 19 | Declarative UI rendering and concurrent state handling |
+| **Language** | TypeScript 6.0 | Strict end-to-end type safety and interface definitions |
+| **Build Tool** | Vite 8 | Near-instant HMR and optimized production rollup bundling |
+| **Styling** | Tailwind CSS v4 & PostCSS | Utility-first CSS architecture with custom Indian color tokens |
+| **Animations** | Framer Motion 14 | Fluid layout transitions, spring physics docks, and 3D card flips |
+| **Computer Vision** | @mediapipe/tasks-vision | On-device WebAssembly hand landmark detection with 21 3D coordinates |
+| **Primary AI** | Google Gemini 2.5 Flash | Conversational simulation, grammar analysis, and vision fallback |
+| **Indic Voice AI** | Sarvam AI (Bulbul, Mayura, Saaras) | Indian accent text-to-speech, regional translation, and audio processing |
+| **Local Speech** | Web Speech API | Client-side zero-latency speech recognition and speech synthesis |
+| **Accessible Primitives** | Radix UI | Headless accessible UI components adhering to WCAG standards |
+| **Visual Effects** | Canvas Confetti | Celebratory particle bursts for streak achievements and milestones |
+| **Linter** | Oxlint | Fast Rust-based linter ensuring strict code hygiene |
+| **Routing** | React Router v7 | Client-side routing with route guards |
+
+---
+
+## Directory Structure
 
 ```
 EduVaani/
 ├── src/
 │   ├── components/
-│   │   ├── analytics/             # Practice chart, fluency trend, scenario donut, heatmap
-│   │   ├── dashboard/             # Stats, welcome banner, scenario cards, vocab flashcards, past sessions
-│   │   ├── landing/               # Hero, language demo, scenario grid, testimonials
-│   │   ├── layout/                # PageLoader, ErrorBoundary
-│   │   ├── sign/                  # CameraPanel, RecognitionOutput, SignGenerationOutput, TextInputPanel
-│   │   ├── tutor/                 # VoiceOrb, ControlDock, MessageBubble, CoachingTipCard
-│   │   ├── ui/                    # Button, Badge, Skeleton, Toast, AnimatedCounter
-│   │   ├── Navbar.tsx             # Responsive navigation with goal progress ring & mobile drawer
-│   │   └── Footer.tsx             # Footer with credits and cultural badges
+│   │   ├── analytics/             # Weekly practice chart, fluency trends, heatmap
+│   │   ├── dashboard/             # Scenario grid, 3D flashcards, past sessions, quick start
+│   │   ├── landing/               # Hero section, interactive demo, features, testimonials
+│   │   ├── layout/                # Responsive navigation, footer, error boundaries
+│   │   ├── sign/                  # Camera panel, sign visualizer, gesture recognition output
+│   │   ├── tutor/                 # Voice orb, control dock, transcript viewer, message bubble
+│   │   └── ui/                    # Button, badge, modal dialogs, skeleton loaders
 │   ├── contexts/
-│   │   └── UserContext.tsx        # User profile, preferences, streak, and auth context
+│   │   └── UserContext.tsx        # User profile, learning preferences, streak tracking
 │   ├── data/
-│   │   ├── isl-signs.json         # Supported ISL signs dictionary & landmark definitions
-│   │   └── isl-sign-animations.json # ISL animation keyframes and fingerspelling mappings
+│   │   ├── isl-signs.json         # ISLRTC gesture definitions and landmark coordinates
+│   │   └── isl-sign-animations.json # 324 vocabulary signs and 26 alphabetic keyframes
 │   ├── lib/
-│   │   ├── ai.ts                  # Gemini AI service, scenarios & smart fallback engine
-│   │   ├── auth.ts                # Session management, streak calculations & achievement metrics
-│   │   ├── multimodal.ts          # Central Multimodal Communication Manager
-│   │   ├── sarvam.ts              # Sarvam AI Bulbul TTS, translation & STT client
-│   │   ├── signGeneration.ts      # Text-to-ISL animation sequencer
-│   │   ├── signLanguage.ts        # Hand gesture detection & ISL classification engine
-│   │   ├── signLanguageModels.ts  # MediaPipe HandLandmarker lifecycle & Gemini Vision fallback
-│   │   ├── speech.ts              # Web Speech API + Sarvam TTS hybrid audio service
-│   │   └── translation.ts         # Multilingual translation service
+│   │   ├── ai.ts                  # Google Gemini 2.5 client, prompt templates, rule engine
+│   │   ├── auth.ts                # Session state, streak logic, achievement milestones
+│   │   ├── multimodal.ts          # Central state orchestrator for voice, text, and sign
+│   │   ├── sarvam.ts              # Sarvam AI Bulbul TTS and Mayura translation client
+│   │   ├── signGeneration.ts      # Text-to-sign sequencing and animation coordinator
+│   │   ├── signLanguage.ts        # Hand landmark geometric analysis and gesture matcher
+│   │   ├── signLanguageModels.ts  # MediaPipe HandLandmarker lifecycle and vision fallback
+│   │   ├── speech.ts              # Hybrid Web Speech and Sarvam audio service
+│   │   └── translation.ts         # Regional translation coordinator
 │   ├── pages/
-│   │   ├── Home.tsx               # Cultural landing page with interactive voice demo
-│   │   ├── Login.tsx              # 2-step onboarding (Identity + Language & Accessibility Preferences)
-│   │   ├── Dashboard.tsx          # Main practice hub with 3D flashcards & session transcripts
+│   │   ├── Home.tsx               # Landing page with live audio preview
+│   │   ├── Login.tsx              # Onboarding flow with vernacular and accessibility selection
+│   │   ├── Dashboard.tsx          # Main practice hub with scenario filters and flashcards
 │   │   ├── SignLanguageTutor.tsx  # Dedicated Indian Sign Language studio
-│   │   └── Analytics.tsx          # Learning metrics, charts & progress insights
-│   ├── App.tsx                    # Routing with Framer Motion page transitions & RequireAuth guards
-│   └── index.css                  # Design tokens, keyframe animations & accessibility styles
-├── .env.example                   # Environment configuration template
-├── package.json
-└── vite.config.ts
+│   │   └── Analytics.tsx          # Practice analytics, fluency history, and milestone badges
+│   ├── App.tsx                    # Route definitions and page transition transitions
+│   └── index.css                  # Design tokens, accessibility focus rings, custom animations
+├── public/                        # Static assets and MediaPipe model binaries
+├── vercel.json                    # Single-page application routing and API rewrite rules
+├── package.json                   # Project dependencies and script declarations
+├── tsconfig.json                  # TypeScript compiler configuration
+└── vite.config.ts                 # Vite bundler plugins and server options
 ```
 
 ---
 
-## ⚙️ Quick Start
+## Local Development Setup
 
-### 1. Prerequisites
-- **Node.js**: v18.0.0 or later (v20+ recommended)
-- **Webcam & Microphone**: Required for voice practice and sign language gesture recognition.
+### Prerequisites
+- Node.js version 18.0.0 or higher (v20+ recommended)
+- A working microphone and webcam for voice and sign language features
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/rot44/EduVaani.git
+cd EduVaani
+```
 
 ### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-Copy `.env.example` to create your local `.env` file:
+### 3. Environment Configuration
+Create a `.env` file in the root directory by copying the template:
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and fill in your API credentials:
+Populate the keys in `.env`:
 ```env
-# Google Gemini API Key (from https://aistudio.google.com/app/apikey)
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
+# Google Gemini API key (https://aistudio.google.com/app/apikey)
+VITE_GEMINI_API_KEY=your_gemini_api_key
 
-# Sarvam AI API Key (from https://dashboard.sarvam.ai)
-VITE_SARVAM_API_KEY=your_sarvam_api_key_here
+# Sarvam AI API key (https://dashboard.sarvam.ai)
+VITE_SARVAM_API_KEY=your_sarvam_api_key
 ```
 
-> **Note on Resilient Fallbacks**:
-> - If `VITE_GEMINI_API_KEY` is not provided, EduVaani automatically engages its built-in rule-based coaching engine and conversational fallback generator so the app remains fully functional.
-> - If `VITE_SARVAM_API_KEY` is not provided, EduVaani gracefully falls back to the native browser Web Speech API for voice synthesis and recognition.
+> **Autonomous Fallback System**: If external API keys are not supplied, EduVaani automatically engages its internal offline heuristic engines. Gemini falls back to deterministic coaching rules, and Sarvam AI falls back to the native Web Speech API.
 
-### 4. Start Development Server
+### 4. Launch Development Server
 ```bash
 npm run dev
 ```
-Open your browser at `http://localhost:5173`.
+The application will launch at `http://localhost:5173`.
 
-### 5. Run Quality Checks
+### 5. Verify Build and Types
 ```bash
-# Linter check (oxlint)
+# Run Rust-based linter
 npm run lint
 
-# TypeScript type check
+# TypeScript compilation check
 npx tsc --noEmit
 
-# Production build
+# Production bundle build
 npm run build
 ```
 
 ---
 
-## 🌐 Browser & Hardware Compatibility
+## Browser and Hardware Compatibility
 
-### 🎙️ Microphone & Voice Features
-- **Desktop**: Google Chrome, Microsoft Edge, Brave, and Safari.
-- **Mobile**: Google Chrome for Android and Safari for iOS.
-- **Permissions**: Requires user permission to access the microphone. A built-in microphone diagnostic modal (`MicDiagnosticModal`) is accessible from the dashboard to troubleshoot permissions and audio volume.
+### Audio and Voice Recognition
+- Supported on Google Chrome, Microsoft Edge, Brave, and Safari.
+- Audio capture utilizes 16 kHz single-channel input with automatic gain control, acoustic echo cancellation, and background noise suppression.
+- The built-in Microphone Diagnostic modal allows testing input levels and troubleshooting browser permissions.
 
-### 📹 Camera & Sign Language Studio
-- **Desktop**: Google Chrome, Microsoft Edge, Safari, and Firefox.
-- **Mobile**: Modern mobile browsers supporting WebRTC `getUserMedia`.
-- **Media Release**: Camera streams and hardware tracks are strictly terminated upon closing the camera or navigating away from the page to preserve device battery and respect privacy.
+### Computer Vision and Camera
+- Supported on all modern WebRTC-compliant browsers (Chrome, Edge, Firefox, Safari).
+- Media streams are isolated to the active session. When turning off the camera or unmounting the sign studio, all media tracks are stopped and released immediately to protect privacy and battery life.
 
 ---
 
-## 📄 License & Attribution
+## Standards and Attribution
 
-- Built with ❤️ for Bharat's learners.
 - Indian Sign Language gesture definitions are curated in alignment with [ISLRTC](https://islrtc.nic.in/) (Indian Sign Language Research and Training Centre) educational resources.
+- Color palette and aesthetic tokens are inspired by classical Indian materials including terracotta, turmeric, and peacock teal, maintaining WCAG AAA contrast ratios for accessibility.
