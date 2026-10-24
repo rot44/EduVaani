@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/sarvam/(.*)",
+      "destination": "https://api.sarvam.ai/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
